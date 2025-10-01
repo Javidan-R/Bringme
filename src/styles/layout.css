@@ -1,0 +1,87 @@
+@tailwind utilities;
+
+@layer components {
+  .sidebar-mobile-header {
+    @apply flex flex-col px-login-px py-sidebar-header-py bg-brand-sidebar-base md:hidden fixed top-0 left-0 w-full z-50 transition-opacity duration-300 border-b border-brand-gray-200;
+  }
+
+  .sidebar-mobile-header-hidden {
+    @apply opacity-0 pointer-events-none;
+  }
+
+  .sidebar-mobile-header-visible {
+    @apply opacity-100;
+  }
+
+  .sidebar-mobile-header-content {
+    @apply flex items-center justify-between;
+  }
+
+  .sidebar-mobile-header-title {
+    @apply text-base font-semibold text-gray-800 font-inter;
+  }
+
+  .sidebar-mobile-header-button {
+    @apply text-gray-800 focus:outline-none  focus:ring-brand-focus-green rounded p-sidebar-button-p;
+  }
+
+  .sidebar-mobile-header-icon {
+    @apply w-sidebar-icon h-sidebar-icon;
+  }
+
+  .sidebar-nav {
+    @apply flex flex-col py-sidebar-py-mobile px-sidebar-px-mobile w-full bg-brand-sidebar-base  fixed top-0 left-0 h-[100svh] z-40 transition-transform duration-300 ease-in-out md:translate-x-0 max-w-[17rem] md:h-[100svh] md:top-0 md:left-0  md:flex md:py-sidebar-py-desktop md:px-sidebar-px-desktop;
+  }
+
+  .sidebar-nav-open {
+    @apply translate-x-0;
+  }
+
+  .sidebar-nav-closed {
+    @apply -translate-x-full;
+  }
+
+  .sidebar-overlay {
+    @apply absolute bottom-0 left-0 w-full h-sidebar-overlay pointer-events-none bg-sidebar-overlay-gradient backdrop-blur-sidebar-overlay;
+  }
+
+  .sidebar-header {
+    @apply flex items-center justify-between mb-sidebar-logo-margin;
+  }
+
+  .sidebar-logo {
+    @apply w-sidebar-logo md:w-sidebar-logo;
+  }
+
+  .sidebar-close-button {
+    @apply text-gray-800 focus:outline-none  focus:ring-brand-focus-green rounded md:hidden p-sidebar-button-p;
+  }
+
+  .sidebar-close-icon {
+    @apply w-sidebar-icon h-sidebar-icon;
+  }
+
+  .sidebar-steps-section {
+    @apply mb-sidebar-steps-margin;
+  }
+
+  .sidebar-steps-title {
+    @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+  }
+
+  .sidebar-steps-list {
+    @apply flex flex-col gap-sidebar-steps-gap w-full;
+  }
+
+  .sidebar-footer {
+    @apply mt-auto relative z-10;
+  }
+
+  .sidebar-button {
+    @apply flex items-center gap-sidebar-button-gap py-sidebar-button-py text-gray-800 hover:text-gray-600 w-full rounded;
+  }
+
+  .sidebar-divider {
+    @apply my-sidebar-divider-margin border-t border-gray-300;
+  }
+}

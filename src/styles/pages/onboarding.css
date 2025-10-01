@@ -1,0 +1,31 @@
+/* src/styles/onboarding.css */
+@layer components {
+  /* Onboarding Page Styles */
+  .onboarding-loading {
+    @apply flex flex-col items-center justify-center min-h-[100svh] bg-gradient-to-b from-brand-login-bgStart to-brand-login-bgEnd;
+  }
+
+  .onboarding-loading-text {
+    @apply text-base text-brand-login-text font-inter;
+  }
+
+  .onboarding-container {
+    @apply flex flex-col min-h-[100svh] bg-gradient-to-b from-brand-login-bgStart to-brand-login-bgEnd firstmobile:flex-row;
+  }
+
+  .onboarding-main {
+    @apply flex-1 p-onboarding-px-mobile firstmobile:ml-sidebar-max firstmobile:p-onboarding-px-desktop overflow-y-auto;
+  }
+
+  .onboarding-content {
+    @apply flex flex-col max-w-onboarding-max mx-auto firstmobile:ml-onboarding-margin-desktop firstmobile:mr-onboarding-margin-desktop;
+  }
+
+  .onboarding-header {
+    @apply flex justify-between items-center mb-onboarding-header-margin;
+  }
+
+  .onboarding-title {
+    @apply text-onboarding-title-mobile leading-onboarding-title-mobile firstmobile:text-onboarding-title-desktop firstmobile:leading-onboarding-title-desktop font-bold text-brand-login-text font-cormorant;
+  }
+}

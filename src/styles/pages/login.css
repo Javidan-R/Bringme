@@ -1,0 +1,79 @@
+/* src/styles/login.css */
+@layer components {
+  /* Login Page Styles */
+  .login-loading {
+    @apply flex flex-col items-center justify-center min-h-[100svh] bg-gradient-to-b from-brand-login-bgStart to-brand-login-bgEnd;
+  }
+
+  .login-loading-text {
+    @apply text-lg text-brand-login-text font-inter;
+  }
+
+  .login-content {
+    @apply flex flex-col items-center w-full px-login-px;
+  }
+
+  .login-title {
+    @apply text-login-title font-bold mb-login-title-margin font-cormorant;
+  }
+
+  .login-google-button {
+    @apply flex items-center justify-center w-full gap-login-button-gap mb-login-section-margin rounded-login-button border-white bg-white hover:bg-gray-100;
+  }
+
+  /* .login-google-icon {
+    @apply w-login-icon-medium h-login-icon-medium;
+  } */
+
+  /* .login-divider {
+    @apply flex items-center justify-center w-full gap-login-divider-gap mb-login-section-margin;
+  } */
+
+  .login-divider-line {
+    @apply flex-1 h-login-divider bg-gray-300;
+  }
+
+  .login-divider-text {
+    @apply text-gray-500 font-light text-base leading-login-or tracking-normal font-inter;
+  }
+
+  .login-error {
+    @apply text-sm text-red-500 mb-login-error-margin text-center;
+  }
+
+  /* .login-form {
+    @apply flex flex-col w-full;
+  } */
+
+  .login-input {
+    @apply mb-login-error-margin w-full;
+  }
+
+  .login-link {
+    @apply text-sm text-brand-black font-semibold mb-login-section-margin underline;
+  }
+
+  .login-submit {
+    @apply flex justify-center items-center my-login-section-margin;
+  }
+
+  .login-footer {
+    @apply flex flex-row items-center justify-center gap-login-button-gap;
+  }
+
+  .login-footer-text {
+    @apply text-sm text-brand-black font-semibold text-center;
+  }
+
+  .login-footer-link {
+    @apply flex items-center;
+  }
+
+  .login-footer-link-text {
+    @apply text-brand-black font-medium text-base leading-login-or tracking-normal underline font-inter;
+  }
+
+  .login-footer-icon {
+    @apply w-login-icon-small h-login-icon-small text-brand-black;
+  }
+}

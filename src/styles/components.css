@@ -1,0 +1,199 @@
+/* src/styles/components.css */
+@layer components {
+  /* Button Styles */
+  .button-base {
+    @apply font-medium flex items-center justify-center transition-all duration-200 font-inter w-button h-button text-base gap-gap px-px py-py;
+  }
+  .button-primary {
+    @apply bg-brand-black text-brand-white rounded-button shadow-button hover:scale-105 hover:bg-gray-800 relative;
+  }
+  .button-outline {
+    @apply bg-transparent text-brand-black text-xl font-semibold rounded-button border border-brand-black;
+  }
+  .button-arrow {
+    @apply w-5 h-5 text-brand-white;
+  }
+
+  /* Input Styles */
+  .input-wrapper {
+    @apply flex flex-col gap-2 w-full mx-auto;
+    min-width: 18.3125rem;
+    max-width: 29.75rem;
+  }
+  .input-base {
+    @apply w-full bg-brand-input-bg border rounded-input text-base transition-all duration-200 font-inter placeholder:text-gray-500 focus:outline-none firstmobile:h-input-mobile firstmobile:px-px-mobile h-input-desktop px-px-desktop py-py;
+  }
+  .input-focused {
+    @apply border-brand-input-focus ring-1 ring-brand-input-focus;
+  }
+  .input-error {
+    @apply border-red-400 ring-2 ring-red-200;
+  }
+  .input-error-text {
+    @apply text-xs text-red-500 mt-error-gap font-inter;
+  }
+
+  /* Checkbox Styles */
+  .checkbox-wrapper {
+    @apply flex items-center gap-checkbox-gap text-gray-600;
+  }
+  .checkbox-input {
+    @apply w-checkbox h-checkbox appearance-none rounded-checkbox border border-gray-400 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-input-focus bg-brand-input-bg;
+  }
+  .checkbox-check {
+    @apply absolute w-checkbox h-checkbox flex items-center justify-center rounded-checkbox bg-brand-input-focus opacity-0 transition-opacity duration-300 ease-in-out pointer-events-none;
+  }
+  .checkbox-label {
+    @apply font-inter text-base leading-checkbox;
+  }
+
+  /* StepItem Styles */
+  .step-wrapper {
+    @apply flex items-center gap-step-gap p-step-padding transition-all duration-300  rounded-step w-full outline-none cursor-pointer;
+  }
+  .step-wrapper-active {
+    @apply bg-white;
+  }
+  .step-circle {
+    @apply relative w-step-circle h-step-circle rounded-full flex items-center justify-center z-10;
+  }
+  .step-circle-bg-completed {
+    @apply bg-brand-step-active text-brand-white;
+  }
+  .step-circle-bg-active {
+    @apply bg-brand-white border-2 border-brand-step-active shadow-md;
+  }
+  .step-circle-bg-inactive {
+    @apply bg-brand-white border-2 border-brand-step-border;
+  }
+  .step-number {
+    @apply text-step font-semibold font-inter z-20;
+  }
+  .step-number-active {
+    @apply text-gray-600;
+  }
+  .step-number-inactive {
+    @apply text-brand-step-border;
+  }
+  .step-label {
+    @apply text-step font-semibold font-inter tracking-wide transition-colors duration-300;
+  }
+  .step-label-completed {
+    @apply text-gray-800;
+  }
+  .step-label-active {
+    @apply text-gray-900;
+  }
+  .step-label-inactive {
+    @apply text-brand-step-border;
+  }
+
+  /* StepIndicator Styles */
+  .step-indicator-wrapper {
+    @apply flex items-center gap-step-indicator-gap bg-brand-step-indicator-bg px-step-indicator-px py-step-indicator-py border-brand-white rounded-step-indicator shadow-sm;
+  }
+  .step-indicator-dot {
+    @apply rounded-full transition-all duration-300;
+  }
+  .step-indicator-dot-completed {
+    @apply w-step-dot h-step-dot bg-brand-step-active;
+  }
+  .step-indicator-dot-active {
+    @apply w-step-dot-active h-step-dot-active bg-brand-white border-border-width border-brand-step-active shadow-md scale-105;
+  }
+  .step-indicator-dot-inactive {
+    @apply w-step-dot h-step-dot bg-gray-300;
+  }
+  /* ModalQuestion Styles */
+  .modal-overlay {
+    @apply fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-modal z-50;
+  }
+
+  .modal-container {
+    @apply w-modal  p-modal-padding-mobile firstmobile:p-modal-padding-desktop rounded-modal shadow-modal;
+    background: linear-gradient(
+        26.6deg,
+        var(--modal-gradient-start) 71.33%,
+        var(--modal-gradient-end) 122.92%
+      ),
+      linear-gradient(0deg, var(--modal-bg-base), var(--modal-bg-base));
+    border-image: linear-gradient(
+        73.93deg,
+        var(--modal-border-start) -5.87%,
+        var(--modal-border-mid) 11.51%,
+        var(--modal-border-mid2) 72.1%,
+        var(--modal-border-start) 95.89%
+      )
+      1;
+  }
+
+  .modal-title {
+    @apply text-modal-title-mobile leading-modal-title-mobile font-cormorant mb-md firstmobile:text-modal-title-desktop firstmobile:leading-modal-title-desktop;
+  }
+
+  .modal-paragraph {
+    @apply text-base leading-modal-paragraph-mobile font-inter mb-md firstmobile:leading-modal-paragraph-desktop;
+  }
+
+  .modal-paragraph-highlight {
+    @apply text-brand-black font-semibold;
+  }
+
+  .modal-button-wrapper {
+    @apply flex justify-center mt-md;
+  }
+
+  @layer components {
+    .dropdown-container {
+      @apply relative;
+    }
+
+    .dropdown-wrapper {
+      @apply relative flex items-center justify-between w-full h-input-mobile md:h-input-desktop px-px py-py bg-brand-input-bg border border-brand-gray-200 rounded-input focus:outline-none  focus:ring-brand-step-active focus:border-brand-step-active;
+    }
+
+    .dropdown-wrapper--error {
+      @apply border-brand-modal-highlight;
+    }
+
+    .dropdown-wrapper--open {
+      @apply ring-brand-step-active border-brand-step-active bg-brand-step-active bg-opacity-10;
+    }
+
+    .dropdown-text {
+      @apply font-inter text-sm text-brand-gray-600 truncate flex-1 text-left;
+    }
+
+    .dropdown-text--placeholder {
+      @apply text-brand-gray-500;
+    }
+
+    .dropdown-icon {
+      @apply w-login-icon-medium h-login-icon-medium text-brand-gray-600;
+    }
+
+    .dropdown-icon--open {
+      @apply text-brand-white;
+    }
+
+    .dropdown-menu {
+      @apply absolute z-10 w-full mt-error-gap bg-brand-sidebar-bg border border-brand-gray-200 rounded-input shadow-modal max-h-60 overflow-y-auto;
+    }
+
+    .dropdown-item {
+      @apply px-px py-py text-sm font-inter cursor-pointer text-brand-gray-800 transition-colors duration-300 rounded-[0.5rem];
+    }
+
+    .dropdown-item--selected {
+      @apply bg-brand-step-active bg-opacity-20;
+    }
+
+    .dropdown-item--hover {
+      @apply hover:bg-brand-gray-200 hover:text-brand-login-text;
+    }
+
+    .dropdown-error {
+      @apply text-xs text-brand-modal-highlight mt-error-gap font-inter;
+    }
+  }
+}
