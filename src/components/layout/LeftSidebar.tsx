@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { X, Menu, ChevronDown } from "lucide-react";
 import Logo from "../../assets/images/BringMeAbroad_Logo.png";
 import StepItem from "../common/StepItem";
+import { leftSidebarVariants, stepIndicatorVariants } from "../../lib/styles/layout";
+
 
 interface StepIndicatorProps {
   steps: string[];
@@ -9,23 +11,20 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => {
+  const styles = stepIndicatorVariants();
+
   return (
-    <div className="flex content-center items-center gap-2 bg-[#EEE8E6] px-3 py-2 border-white rounded-[250px] shadow-sm">
+    <div className={styles.container()}>
       {steps.map((_, index) => {
         const stepNumber = index + 1;
         const isCompleted = currentStep > stepNumber;
         const isActive = currentStep === stepNumber;
+        const dotState = isCompleted ? "completed" : isActive ? "active" : "inactive";
 
         return (
           <div
             key={index}
-            className={`rounded-full transition-all duration-300 ${
-              isCompleted
-                ? "w-3 h-3 bg-green-500"
-                : isActive
-                ? "w-4 h-4 bg-white border-2 border-green-500 shadow-md scale-105"
-                : "w-3 h-3 bg-gray-300"
-            }`}
+            className={stepIndicatorVariants({ dotState }).dot()}
           />
         );
       })}
@@ -34,12 +33,12 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => 
 };
 
 interface LeftSidebarProps {
-  steps?: string[]; // Optional: Only passed during onboarding
-  currentStep?: number; // Optional: Only passed during onboarding
+  steps?: string[];
+  currentStep?: number;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  onStepClick?: (stepNumber: number) => void; // Optional: Only passed during onboarding
-  onLogout: () => void; // Required: For logout functionality
+  onStepClick?: (stepNumber: number) => void;
+  onLogout: () => void;
 }
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -54,7 +53,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
 
-  // Debug logging to verify currentStep
+  const menuState = isMenuOpen ? "open" : "closed";
+  const chevronState = isSupportOpen ? "open" : "closed";
+  const styles = leftSidebarVariants({ menuState, chevronState });
+
   if (steps.length > 0) {
     console.log(`LeftSidebar: currentStep=${currentStep}`);
   }
@@ -137,22 +139,15 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     <>
       {/* Mobile Header */}
       {steps.length > 0 && (
-        <div
-          className={`flex flex-col px-4 py-3 bg-[#FCF7F6] shadow-sm md:hidden fixed top-0 left-0 w-full z-50 transition-opacity duration-300 border-b border-gray-200 ${
-            isMenuOpen ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}
-        >
-          <div className="flex items-center justify-between">
+        <div className={styles.mobileHeader()}>
+          <div className={styles.mobileHeaderRow()}>
             <img
               src={Logo}
               alt="Bring Me Abroad Logo"
-              className="w-[120px]"
+              className={styles.logo()}
             />
-            <div className="flex items-center gap-3">
-              <span
-                className="text-[1rem] font-semibold text-gray-800"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
+            <div className={styles.setupGroup()}>
+              <span className={styles.setupLabel()}>
                 Setup
               </span>
               <StepIndicator steps={steps} currentStep={currentStep} />
@@ -162,9 +157,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={isMenuOpen}
-              className="text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1"
+              className={styles.menuButton()}
             >
-              <Menu className="w-6 h-6" />
+              <Menu className={styles.menuIcon()} />
             </button>
           </div>
         </div>
@@ -173,18 +168,16 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {/* Sidebar */}
       <nav
         ref={sidebarRef}
-        className={`flex flex-col py-6 px-6 w-full bg-[#FCF7F6] shadow-lg fixed top-0 left-0 h-full z-40 transition-transform duration-300 ease-in-out ${
-          isMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 md:w-[280px] md:h-screen md:top-0 md:left-0 md:shadow-md md:flex`}
+        className={styles.sidebar()}
         role="navigation"
         aria-label={steps.length > 0 ? "Onboarding steps" : "Dashboard navigation"}
         tabIndex={-1}
       >
-        <div className="flex items-center justify-between mb-10">
+        <div className={styles.sidebarHeader()}>
           <img
             src={Logo}
             alt="Bring Me Abroad Logo"
-            className="w-[150px] md:w-[150px]"
+            className={styles.logo()}
           />
           <button
             onClick={() => {
@@ -192,20 +185,20 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
               setIsSupportOpen(false);
             }}
             aria-label="Close menu"
-            className="text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded md:hidden p-1"
+            className={styles.closeButton()}
           >
-            <X className="w-6 h-6" />
+            <X className={styles.menuIcon()} />
           </button>
         </div>
 
         {steps.length > 0 && (
           <>
-            <div className="mb-4">
-              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <div className={styles.sectionTitleWrapper()}>
+              <h2 className={styles.sectionTitle()}>
                 Recommendations Setup
               </h2>
             </div>
-            <div className="flex flex-col gap-1 w-full">
+            <div className={styles.stepsContainer()}>
               {steps.map((stepLabel, index) => {
                 const stepNumber = index + 1;
                 const isActive = currentStep === stepNumber;
@@ -230,16 +223,16 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           </>
         )}
 
-        <div className="mt-auto">
+        <div className={styles.footerContainer()}>
           {/* Support Tab with Dropdown */}
-          <div className="relative">
+          <div className={styles.supportDropdownWrapper()}>
             <button
               onClick={() => setIsSupportOpen(!isSupportOpen)}
-              className="flex items-center gap-3 py-3 text-gray-800 hover:text-gray-600 w-full focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
+              className={styles.supportButton()}
               aria-expanded={isSupportOpen}
               aria-label="Support menu"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={styles.supportIcon()} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -247,20 +240,16 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   d="M18.364 5.636a9 9 0 11-12.728 0 9 9 0 0112.728 0zM12 9v3m0 0v3m-3 0H9"
                 />
               </svg>
-              <span className="text-sm font-medium">Support</span>
-              <ChevronDown
-                className={`w-4 h-4 ml-auto transition-transform duration-200 ${
-                  isSupportOpen ? "rotate-180" : ""
-                }`}
-              />
+              <span className={styles.supportLabel()}>Support</span>
+              <ChevronDown className={styles.chevronIcon()} />
             </button>
             {isSupportOpen && (
-              <div className="absolute bottom-full left-0 w-full bg-white shadow-lg rounded-lg py-2 mb-2 z-50">
+              <div className={styles.dropdownMenu()}>
                 {supportOptions.map((option) => (
                   <button
                     key={option.label}
                     onClick={() => handleSupportOptionClick(option.subject)}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                    className={styles.dropdownItem()}
                   >
                     {option.label}
                   </button>
@@ -272,10 +261,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           {/* Logout Tab */}
           <button
             onClick={onLogout}
-            className="flex items-center gap-3 py-3 text-gray-800 hover:text-gray-600 w-full focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
+            className={styles.logoutButton()}
             aria-label="Logout"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={styles.logoutIcon()} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -283,7 +272,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            <span className="text-sm font-medium">Logout</span>
+            <span className={styles.logoutLabel()}>Logout</span>
           </button>
         </div>
       </nav>

@@ -1,7 +1,75 @@
-// src/components/steps/FamilyStep.tsx
 import { useState, useCallback } from "react";
+import { tv } from "tailwind-variants";
 import NavigationButtons from "../common/NavigationButtons";
 import MultiSelect from "../common/MultiSelect";
+
+const familyStepVariants = tv({
+  slots: {
+    container: [
+      "flex",
+      "flex-col",
+      "gap-[1.5rem]",
+    ],
+    questionWrapper: [
+      "flex",
+      "flex-col",
+      "gap-[0.5rem]",
+    ],
+    label: [
+      "text-[#1F2A44]",
+      "font-medium",
+      "text-[0.875rem]",
+      "leading-[1.25rem]",
+      "md:text-[1rem]",
+      "md:leading-[1.5rem]",
+      "font-inter",
+    ],
+    radioGroup: [
+      "flex",
+      "gap-[1rem]",
+    ],
+    radioLabel: [
+      "flex",
+      "items-center",
+      "gap-[0.5rem]",
+    ],
+    radio: [
+      "w-[1rem]",
+      "h-[1rem]",
+      "text-[#03BCA3]",
+    ],
+    radioText: [
+      "text-[0.875rem]",
+      "text-[#1F2A44]",
+      "font-inter",
+    ],
+    checkboxGroup: [
+      "flex",
+      "gap-[1rem]",
+    ],
+    checkboxLabel: [
+      "flex",
+      "items-center",
+      "gap-[0.5rem]",
+    ],
+    checkbox: [
+      "w-[1rem]",
+      "h-[1rem]",
+      "text-[#03BCA3]",
+    ],
+    checkboxText: [
+      "text-[0.875rem]",
+      "text-[#1F2A44]",
+      "font-inter",
+    ],
+    errorText: [
+      "text-[0.75rem]",
+      "text-red-500",
+      "mt-[0.25rem]",
+      "font-inter",
+    ],
+  },
+});
 
 interface FamilyStepData {
   hasPartner: string;
@@ -44,6 +112,8 @@ const FamilyStep: React.FC<FamilyStepProps> = ({
   const [hasChildren, setHasChildren] = useState<boolean>(data.hasChildren);
   const [errors, setErrors] = useState<{ hasPartner?: string }>({});
 
+  const styles = familyStepVariants();
+
   const validateForm = useCallback(() => {
     const newErrors: { hasPartner?: string } = {};
     if (!hasPartner) {
@@ -69,84 +139,64 @@ const FamilyStep: React.FC<FamilyStepProps> = ({
   }, [hasPartner, partnerNationality, hasChildren, onSubmit, onNext, validateForm]);
 
   return (
-    <div className="flex flex-col gap-[1.5rem]">
-      {/* Q1: Do you have a partner? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
+    <div className={styles.container()}>
+      <div className={styles.questionWrapper()}>
+        <label className={styles.label()}>
           Do you have a partner? *
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.radioGroup()}>
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="hasPartner"
-              value="Yes, and we’re legally married"
-              checked={hasPartner === "Yes, and we’re legally married"}
+              value="Yes, and we're legally married"
+              checked={hasPartner === "Yes, and we're legally married"}
               onChange={(e) => setHasPartner(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes, and we’re legally married
+            <span className={styles.radioText()}>
+              Yes, and we're legally married
             </span>
           </label>
-          <label className="flex items-center gap-[0.5rem]">
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="hasPartner"
-              value="Yes, but we’re not legally married"
-              checked={hasPartner === "Yes, but we’re not legally married"}
+              value="Yes, but we're not legally married"
+              checked={hasPartner === "Yes, but we're not legally married"}
               onChange={(e) => setHasPartner(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes, but we’re not legally married
+            <span className={styles.radioText()}>
+              Yes, but we're not legally married
             </span>
           </label>
-          <label className="flex items-center gap-[0.5rem]">
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="hasPartner"
               value="No"
               checked={hasPartner === "No"}
               onChange={(e) => setHasPartner(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              No
-            </span>
+            <span className={styles.radioText()}>No</span>
           </label>
         </div>
         {errors.hasPartner && (
-          <p
-            className="text-[0.75rem] text-red-500 mt-[0.25rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
+          <p className={styles.errorText()}>
             {errors.hasPartner}
           </p>
         )}
       </div>
 
-      {/* Q2: Partner's nationality (only if hasPartner is not "No") */}
       {hasPartner && hasPartner !== "No" && (
-        <div className="flex flex-col gap-[0.5rem]">
+        <div className={styles.questionWrapper()}>
           <label
             htmlFor="partnerNationality"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.label()}
           >
-            What is your partner’s nationality?
+            What is your partner's nationality?
           </label>
           <MultiSelect
             id="partnerNationality"
@@ -158,28 +208,19 @@ const FamilyStep: React.FC<FamilyStepProps> = ({
         </div>
       )}
 
-      {/* Q3: Do you have children? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
+      <div className={styles.questionWrapper()}>
+        <label className={styles.label()}>
           Do you have children?
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.checkboxGroup()}>
+          <label className={styles.checkboxLabel()}>
             <input
               type="checkbox"
               checked={hasChildren}
               onChange={(e) => setHasChildren(e.target.checked)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.checkbox()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes
-            </span>
+            <span className={styles.checkboxText()}>Yes</span>
           </label>
         </div>
       </div>

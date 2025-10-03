@@ -1,17 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
+import { multiSelect } from "../../lib/styles/ui";
+import { MultiSelectProps } from "@/types/components";
 
-interface MultiSelectProps {
-  id?: string;
-  values: string[];
-  onChange: (values: string[]) => void;
-  placeholder: string;
-  options?: string[];
-  "aria-invalid"?: boolean;
-  "aria-describedby"?: string;
-  className?: string;
-  style?: React.CSSProperties;
-}
+const { wrapper, container, tag, tagText, removeButton, input, dropdown, option } = multiSelect();
 
 const MultiSelect: React.FC<MultiSelectProps> = ({
   id,
@@ -51,30 +43,13 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full">
-      <div
-        className={`flex flex-wrap gap-[0.5rem] w-full min-h-[3rem] px-[0.75rem] py-[0.5rem] bg-[#E5DEDB] border-[0.0125rem] ${
-          ariaInvalid ? "border-[#EF4444]" : "border-[#D1D5DB]"
-        } rounded-[0.5rem] focus-within:ring-[0.125rem] focus-within:ring-[#03BCA3] focus-within:border-[#03BCA3] transition-all duration-200 ${className}`}
-        style={style}
-      >
+    <div ref={wrapperRef} className={wrapper()}>
+      <div className={`${container()} ${className}`} style={style}>
         {values.map((value) => (
-          <div
-            key={value}
-            className="flex items-center gap-[0.5rem] px-[0.5rem] py-[0.8rem] bg-[#03BCA3] text-white rounded-[0.25rem]"
-          >
-            <span
-              className="text-[0.875rem] font-medium md:text-[1rem]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              {value}
-            </span>
-            <button
-              onClick={() => handleRemove(value)}
-              className="text-white hover:text-gray-300 focus:outline-none focus:ring-[0.125rem] focus:ring-[#22C55E] rounded"
-              aria-label={`Remove ${value}`}
-            >
-              <X className="w-[1.2rem] h-[1.2rem]" />
+          <div key={value} className={tag()}>
+            <span className={tagText()}>{value}</span>
+            <button onClick={() => handleRemove(value)} className={removeButton()} aria-label={`Remove ${value}`}>
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           </div>
         ))}
@@ -84,9 +59,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
-            if (options.length > 0 && e.target.value) {
-              setIsDropdownOpen(true);
-            }
+            if (options.length > 0 && e.target.value) setIsDropdownOpen(true);
           }}
           onFocus={() => options.length > 0 && setIsDropdownOpen(true)}
           onKeyDown={(e) => {
@@ -96,41 +69,33 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             }
           }}
           placeholder={values.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[8rem] bg-transparent outline-none text-[#1F2A44] text-[0.875rem] font-medium placeholder:text-[#9CA3AF] md:text-[1rem]"
+          className={input()}
           style={{ fontFamily: "Inter, sans-serif" }}
           aria-invalid={ariaInvalid}
           aria-describedby={ariaDescribedBy}
         />
       </div>
+
       {options.length > 0 && isDropdownOpen && (
-        <ul
-          className="absolute z-10 mt-[0.25rem] w-full max-h-[12.5rem] overflow-y-auto bg-white border-[0.0625rem] border-[#D1D5DB] rounded-[0.5rem] shadow-[0_0.25rem_0.375rem_-0.0625rem_rgba(0,0,0,0.1)]"
-          role="listbox"
-          aria-label="Select options"
-        >
+        <ul className={dropdown()} role="listbox" aria-label="Select options">
           {options
-            .filter(
-              (option) =>
-                !values.includes(option) &&
-                option.toLowerCase().includes(inputValue.toLowerCase())
-            )
-            .map((option) => (
+            .filter((optionText) => !values.includes(optionText) && optionText.toLowerCase().includes(inputValue.toLowerCase()))
+            .map((optionText) => (
               <li
-                key={option}
-                onClick={() => handleAdd(option)}
+                key={optionText}
+                onClick={() => handleAdd(optionText)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    handleAdd(option);
+                    handleAdd(optionText);
                   }
                 }}
                 tabIndex={0}
-                className="px-[0.75rem] py-[0.5rem] text-[#1F2A44] text-[0.875rem] hover:bg-[#F3F4F6] cursor-pointer focus:bg-[#F3F4F6] focus:outline-none md:text-[1rem]"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className={option()}
                 role="option"
-                aria-selected={values.includes(option)}
+                aria-selected={values.includes(optionText)}
               >
-                {option}
+                {optionText}
               </li>
             ))}
         </ul>

@@ -1,3 +1,4 @@
+// src/pages/OnboardingPage.tsx
 import { useNavigate } from "react-router-dom";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import LeftSidebar from "../components/layout/LeftSidebar";
@@ -19,6 +20,8 @@ import { setUser, clearUser } from "../features/authSlice";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import PackageSelectionPage from "../components/PackageSelectionPage";
 import FinalizeProfileModal from "../components/FinalizeProfileModal";
+import { onboardingVariants } from "../lib/styles/onboarding";
+import { motion } from "framer-motion";
 
 interface FormData {
   general: {
@@ -65,23 +68,17 @@ const OnboardingPage: React.FC = () => {
   const { signOut } = useClerk();
 
   const { formData, currentStep } = useAppSelector((state) => state.onboarding);
-  
-  // *** ƏSAS DƏYİŞİKLİK: Modalın ilkin dəyərini TRUE olaraq təyin edirik.
-  // Bu, səhifə yüklənən kimi modalın görünməsini təmin edir.
-  const [isModalOpen, setIsModalOpen] = useState(true); 
-  
+
+  // Modal initially true (shows on first load)
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [showPackageSelection, setShowPackageSelection] = useState(false);
 
-  /** Check if the user is signed in and show modal if first visit */
+  const styles = onboardingVariants();
+
   useEffect(() => {
     if (!isLoaded) return;
-
-    // *** LOCAL STORAGE YOXLAMASI LƏĞV EDİLİR, ÇÜNKİ İLKİN DƏYƏR TRUE-dur.
-    // Əgər modalı yalnız bir dəfə göstərmək istəsəniz, bu hissəni bərpa edə bilərsiniz:
-    // const hasSeenModal = localStorage.getItem("hasSeenOnboardingModal");
-    // if (!hasSeenModal) setIsModalOpen(true);
 
     if (isSignedIn && user) {
       dispatch(
@@ -96,14 +93,10 @@ const OnboardingPage: React.FC = () => {
     }
   }, [isLoaded, isSignedIn, user, dispatch, navigate]);
 
-  /** Modal close handler */
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
-    // Hər dəfə açılma tələbinə uyğun olaraq, bu sətir lazım deyil:
-    // localStorage.setItem("hasSeenOnboardingModal", "true");
   }, []);
 
-  /** Handle form step submission */
   const handleStepSubmit = useCallback(
     (stepData: Partial<FormData[keyof FormData]>, stepName: keyof FormData) => {
       dispatch(updateFormData({ stepName, data: stepData }));
@@ -111,11 +104,8 @@ const OnboardingPage: React.FC = () => {
     [dispatch]
   );
 
-  /** Navigate to next step or show finalize modal */
   const handleNext = useCallback(() => {
-    // Əgər modal hələ də açıqdırsa, heç nə etmə
-    if (isModalOpen) return; 
-
+    if (isModalOpen) return;
     if (currentStep < steps.length) {
       dispatch(setCurrentStep(currentStep + 1));
     } else {
@@ -123,20 +113,14 @@ const OnboardingPage: React.FC = () => {
     }
   }, [currentStep, dispatch, isModalOpen]);
 
-  /** Navigate to previous step */
   const handlePrevious = useCallback(() => {
-    // Əgər modal hələ də açıqdırsa, heç nə etmə
     if (isModalOpen) return;
-
     if (currentStep > 1) dispatch(setCurrentStep(currentStep - 1));
   }, [currentStep, dispatch, isModalOpen]);
 
-  /** Navigate to a specific step */
   const handleStepNavigation = useCallback(
     (stepNumber: number) => {
-      // Əgər modal hələ də açıqdırsa, heç nə etmə
       if (isModalOpen) return;
-
       if (stepNumber >= 1 && stepNumber <= steps.length && stepNumber <= currentStep) {
         dispatch(setCurrentStep(stepNumber));
       }
@@ -144,14 +128,12 @@ const OnboardingPage: React.FC = () => {
     [currentStep, dispatch, isModalOpen]
   );
 
-  /** Finalize onboarding and show package selection */
   const handleFinalize = useCallback(() => {
     setShowFinalizeModal(false);
     setShowPackageSelection(true);
     dispatch(resetFormData());
   }, [dispatch]);
 
-  /** Logout user */
   const handleLogout = useCallback(() => {
     signOut();
     dispatch(clearUser());
@@ -159,7 +141,6 @@ const OnboardingPage: React.FC = () => {
     navigate("/login", { replace: true });
   }, [signOut, dispatch, navigate]);
 
-  /** Render the current step content */
   const renderStepContent = useMemo(() => {
     const props = {
       onPrevious: handlePrevious,
@@ -222,23 +203,29 @@ const OnboardingPage: React.FC = () => {
     }
   }, [currentStep, formData, handleNext, handlePrevious, handleStepSubmit]);
 
-  /** Loading state */
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#F4F0EF] to-[#FFF]">
-        <p className="text-[#1F2A44] text-base font-inter">Loading...</p>
+      <div className={styles.loading()}>
+        <p className={styles.loadingText()}>Loading...</p>
       </div>
     );
   }
 
-  /** Show package selection if finalized */
   if (showPackageSelection) return <PackageSelectionPage />;
 
-  /** Main Onboarding Page */
+  // Framer Motion variants for the main content
+  const containerMotion = {
+    hidden: { opacity: 0, y: 8 },
+    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.06, duration: 0.4 } },
+  };
+  const itemMotion = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.36 } },
+  };
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-b from-[#F4F0EF] to-[#FFF]">
-      {/* First visit modal */}
-      {/* isModalOpen TRUE olduğu üçün, səhifə açılan kimi görünəcək */}
+    <div className={styles.page()}>
+      {/* Modal (first-visit) */}
       {isModalOpen && (
         <ModalQuestion
           title="Setting up your Visa Recommendations"
@@ -250,38 +237,53 @@ const OnboardingPage: React.FC = () => {
 
       {/* Finalize profile modal */}
       {showFinalizeModal && (
-        <FinalizeProfileModal
-          onEdit={() => setShowFinalizeModal(false)}
-          onFinalize={handleFinalize}
-        />
+        <FinalizeProfileModal onEdit={() => setShowFinalizeModal(false)} onFinalize={handleFinalize} />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar (LeftSidebar internally should avoid inline classes) */}
       <LeftSidebar
         steps={steps}
         currentStep={currentStep}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
-        // Modal açıq olduqda naviqasiyanı bloklayır (istifadəçinin addımlara keçməsinin qarşısını alır)
-        onStepClick={handleStepNavigation} 
+        onStepClick={handleStepNavigation}
         onLogout={handleLogout}
         aria-label="Onboarding Steps Navigation"
       />
 
-      {/* Step Content */}
-      <div className="flex-1 p-4 md:ml-[17.5rem] md:p-10 overflow-y-auto">
-        <div className="max-w-[1200px] mx-auto md:mx-[3rem]">
-          <div className="flex justify-between items-center mb-6">
-            <h1
-              className="text-[1.5rem] font-bold text-[#1F2A44] leading-[2rem] md:text-[1.875rem] md:leading-[2.5rem]"
-              style={{ fontFamily: "Cormorant, serif" }}
-            >
-              {steps[currentStep - 1]}
-            </h1>
-          </div>
-          <main aria-live="polite">{renderStepContent}</main>
+      {/* Main content */}
+      <motion.main
+        className={styles.main()}
+        initial="hidden"
+        animate="show"
+        variants={containerMotion}
+      >
+        <div className={styles.inner()}>
+          <motion.div className={styles.headerRow()} variants={itemMotion}>
+            <h1 className={styles.stepTitle()}>{steps[currentStep - 1]}</h1>
+          </motion.div>
+
+          <motion.section className={styles.stepContent()} variants={itemMotion} aria-live="polite">
+            {renderStepContent}
+          </motion.section>
+
+          {/* Example cards / summary (keeps previous placeholders but driven by tv) */}
+          <motion.div className={styles.cardsGrid()} variants={itemMotion}>
+            <div className={styles.card()}>
+              <h2 className={styles.cardTitle()}>Visa Recommendations</h2>
+              <p className={styles.cardDesc()}>
+                View personalized visa options based on your profile.
+              </p>
+            </div>
+            <div className={styles.card()}>
+              <h2 className={styles.cardTitle()}>Next Steps</h2>
+              <p className={styles.cardDesc()}>
+                Complete your profile to unlock more features.
+              </p>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.main>
     </div>
   );
 };

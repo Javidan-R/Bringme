@@ -1,13 +1,16 @@
+// Login.tsx
 import { Link, useNavigate } from "react-router-dom";
 import { useSignIn, useUser } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import LoginContainer from "../components/layout/LoginContainer";
-import { ArrowRight } from "lucide-react";
 import GoogleIcon from "../assets/icons/google.svg";
 import { useAppDispatch } from "../hooks";
 import { setUser } from "../features/authSlice";
+import { loginVariants } from "../lib/styles/login";
 
 interface ClerkErrorDetail {
   message: string;
@@ -43,10 +46,12 @@ const Login: React.FC = () => {
     password?: string;
     server?: string;
   }>({});
+
   const navigate = useNavigate();
   const { isLoaded, signIn, setActive } = useSignIn();
   const { user, isSignedIn } = useUser();
   const dispatch = useAppDispatch();
+  const styles = loginVariants();
 
   useEffect(() => {
     if (isLoaded && isSignedIn && user) {
@@ -62,8 +67,8 @@ const Login: React.FC = () => {
 
   if (!isLoaded) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-brand-login-bgStart to-brand-login-bgEnd">
-        <p className="text-lg text-brand-login-text font-inter">Loading...</p>
+      <div className={styles.loadingContainer()}>
+        <p className={styles.loadingText()}>Loading...</p>
       </div>
     );
   }
@@ -86,7 +91,6 @@ const Login: React.FC = () => {
     }
 
     setErrors({});
-
     if (!signIn) {
       setErrors({
         server: "Login service is not available. Please try again later.",
@@ -99,10 +103,6 @@ const Login: React.FC = () => {
 
       if (result.status === "complete") {
         if (setActive) await setActive({ session: result.createdSessionId });
-        else
-          setErrors({
-            server: "Failed to activate session. Please try again.",
-          });
       } else if (
         result.status === "needs_first_factor" ||
         result.status === "needs_second_factor"
@@ -149,83 +149,104 @@ const Login: React.FC = () => {
     }
   };
 
+  // Framer Motion animation variants
+  const inputVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.4 },
+    }),
+  };
+
+  const buttonVariant = {
+    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    // tap: { scale: 0.95, transition: { duration: 0.1 } },
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
   return (
     <LoginContainer>
-      <div className="w-full md:max-w-lg sm:max-w-lg px-5 flex flex-col items-center">
-        {/* Title */}
-        <h1 className="text-4xl font-bold mb-6 font-cormorant">Login</h1>
+      <motion.div
+        className={styles.container()}
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      >
+        <motion.h1 className={styles.title()} variants={inputVariant}>
+          Login
+        </motion.h1>
 
-        {/* Google Button */}
-        <Button
-          variant="outline"
-          className="flex items-center justify-center w-full gap-3 mb-6 rounded-lg border border-white bg-white hover:bg-gray-100"
-          onClick={handleGoogleSignIn}
-          disabled={!signIn}
-        >
-          <img src={GoogleIcon} alt="Google" className="w-5 h-5 mr-2" />
-          Login with Google
-        </Button>
+        <motion.div variants={inputVariant} custom={0.1}>
+          <Button
+            variant="outline"
+            className={styles.googleButton()}
+            onClick={handleGoogleSignIn}
+            disabled={!signIn}
+          >
+            <img src={GoogleIcon} alt="Google" className={styles.googleIcon()} />
+            Login with Google
+          </Button>
+        </motion.div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-6 w-full">
-          <div className="flex-1 h-[1px] bg-gray-300"></div>
-          <span className="text-gray-500 font-light text-base">or</span>
-          <div className="flex-1 h-[1px] bg-gray-300"></div>
+        <div className={styles.dividerContainer()}>
+          <div className={styles.dividerLine()}></div>
+          <span className={styles.dividerText()}>or</span>
+          <div className={styles.dividerLine()}></div>
         </div>
 
-        {/* Server Error */}
         {errors.server && (
-          <p className="text-sm text-red-500 mb-4 text-center">{errors.server}</p>
+          <motion.p className={styles.errorMessage()} variants={inputVariant}>
+            {errors.server}
+          </motion.p>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col w-full">
-          <Input
-            label="E-mail address"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value.trim())}
-            error={errors.email}
-            className="mb-4 w-full"
-            placeholder="Enter your email"
-            autoComplete="email"
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
-            className="mb-4 w-full"
-            placeholder="Enter your password"
-            autoComplete="current-password"
-          />
+        <form onSubmit={handleSubmit} className={styles.form()}>
+          <motion.div className={styles.inputWrapper()} custom={0.2} variants={inputVariant}>
+            <Input
+              label="E-mail address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value.trim())}
+              error={errors.email}
+              placeholder="Enter your email"
+              autoComplete="email"
+            />
+          </motion.div>
+          <motion.div className={styles.inputWrapper()} custom={0.3} variants={inputVariant}>
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={errors.password}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+            />
+          </motion.div>
 
-          <div className="text-left mb-6">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-black font-semibold underline"
-            >
+          <div className={styles.forgotPasswordWrapper()}>
+            <Link to="/forgot-password" className={styles.forgotPasswordLink()}>
               Forgot Password?
             </Link>
           </div>
 
-          <div className="flex justify-center items-center my-6">
+          <motion.div className={styles.buttonWrapper()} variants={buttonVariant} whileHover="hover" whileTap="tap">
             <Button type="submit" variant="primary" disabled={!signIn}>
               Login
             </Button>
-          </div>
+          </motion.div>
         </form>
 
-        {/* Footer */}
-        <div className="flex flex-row items-center justify-center gap-3 mt-8">
-          <p className="text-sm text-black font-semibold text-center">Need an account?</p>
-          <Link to="/signup" className="flex items-center gap-1">
-            <span className="text-black font-medium text-base underline">Sign Up</span>
-            <ArrowRight className="w-5 h-5 text-black" />
+        <div className={styles.footer()}>
+          <p className={styles.footerText()}>Need an account?</p>
+          <Link to="/signup" className={styles.signupLink()}>
+            <span className={styles.signupText()}>Sign Up</span>
+            <ArrowRight className={styles.signupIcon()} />
           </Link>
         </div>
-      </div>
+      </motion.div>
     </LoginContainer>
   );
 };

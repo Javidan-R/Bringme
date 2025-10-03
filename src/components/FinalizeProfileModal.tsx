@@ -1,18 +1,24 @@
 import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Check } from "lucide-react";
+import { finalizeProfileModalVariants } from "../lib/styles/finalizeprofile";
 
 interface FinalizeProfileModalProps {
   onEdit: () => void;
   onFinalize: () => void;
 }
 
-const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ onEdit, onFinalize }) => {
+const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ 
+  onEdit, 
+  onFinalize 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const visibility = isOpen && !isClosing ? "open" : "closing";
+  const styles = finalizeProfileModalVariants({ visibility });
+
   useEffect(() => {
-    // Komponent yükləndikdən qısa müddət sonra modalı açır
     setTimeout(() => setIsOpen(true), 50);
   }, []);
 
@@ -20,7 +26,7 @@ const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ onEdit, onF
     setIsClosing(true);
     setTimeout(() => {
       setIsOpen(false);
-    }, 300); // Kapanma animasyon süresi
+    }, 300);
   };
 
   const handleFinalize = () => {
@@ -28,18 +34,16 @@ const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ onEdit, onF
     setTimeout(() => {
       setIsOpen(false);
       onFinalize();
-    }, 300); // Kapanma animasyon süresi
+    }, 300);
   };
 
   useEffect(() => {
-    // ESC basıldığında modalı bağlama
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleClose();
       }
     };
 
-    // Fokus tələsi (Focus Trap)
     const handleFocusTrap = (event: KeyboardEvent) => {
       if (!modalRef.current) return;
       const focusableElements = modalRef.current.querySelectorAll(
@@ -72,32 +76,20 @@ const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ onEdit, onF
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-center items-center transition-opacity duration-300 ${
-        isOpen && !isClosing ? "opacity-100" : "opacity-0"
-      }`}
+      className={styles.overlay()}
       role="dialog"
       aria-labelledby="modal-title"
       aria-modal="true"
     >
-      {/* DƏYİŞİKLİK BURADADIR: 
-        bg-opacity-50 və backdrop-blur-sm silinib, 
-        tam qara (bg-black) və tam şəffaf olmayan (opacity-100, lakin əslində bg-opacity-100 olmalıdır) istifadə olunur. 
-        Tailwind-də bg-black adətən bg-opacity-100 deməkdir, amma kodu daha aydın etmək üçün bu şəkildə dəyişdiririk.
-      */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-100 transition-opacity duration-300 ${
-          isOpen && !isClosing ? "opacity-100" : "opacity-0"
-        }`}
+        className={styles.backdrop()}
         onClick={handleClose}
-      ></div>
+      />
       
-      {/* Modalın özü */}
       <div
         ref={modalRef}
         tabIndex={-1}
-        className={`relative flex flex-col gap-[24px] w-[90%] max-w-[343px] bg-[#F4F0EF] rounded-[16px] p-[24px] transition-all duration-300 transform ${
-          isOpen && !isClosing ? "scale-100 opacity-100" : "scale-95 opacity-0"
-        } md:max-w-[553px] md:p-[42px_36px_36px_36px]`}
+        className={styles.modal()}
         style={{
           background:
             "linear-gradient(0deg, #F4F0EF, #F4F0EF), linear-gradient(26.6deg, rgba(255, 255, 255, 0.2275) 71.33%, rgba(43, 212, 162, 0.35) 122.92%)",
@@ -110,33 +102,27 @@ const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ onEdit, onF
       >
         <h2
           id="modal-title"
-          className="text-[24px] font-bold text-[#1F2A44] text-center leading-[32px] md:text-[30px] md:leading-[40px]"
-          style={{ fontFamily: "Cormorant, serif" }}
+          className={styles.title()}
         >
           Finalize Your Profile
         </h2>
-        <p
-          className="text-[14px] text-[#6B7280] text-center leading-[20px] flex-1 md:text-[16px] md:leading-[24px]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          You’re about to create your personalized reports based on your current answers. Once submitted, your profile cannot be edited and will be used to generate all recommendations. Please review your information carefully before confirming.
+        <p className={styles.description()}>
+          You're about to create your personalized reports based on your current answers. Once submitted, your profile cannot be edited and will be used to generate all recommendations. Please review your information carefully before confirming.
         </p>
-        <div className="flex flex-col gap-[16px] sm:flex-row sm:justify-between mt-auto">
+        <div className={styles.buttonsWrapper()}>
           <button
             onClick={onEdit}
-            className="flex items-center gap-[8px] text-[#6B7280] text-[14px] leading-[20px] hover:text-[#1F2A44] transition-colors md:text-[16px] md:leading-[24px]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.editButton()}
           >
-            <ArrowLeft className="w-[20px] h-[20px]" />
+            <ArrowLeft className={styles.icon()} />
             Edit Profile
           </button>
           <button
             onClick={handleFinalize}
-            className="flex items-center gap-[8px] bg-[#1F2A44] text-white rounded-[16px] px-[24px] py-[12px] text-[14px] leading-[20px] md:text-[16px] md:leading-[24px] hover:bg-[#374151] transition-colors"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.finalizeButton()}
           >
             Finalize
-            <Check className="w-[20px] h-[20px]" />
+            <Check className={styles.icon()} />
           </button>
         </div>
       </div>

@@ -1,11 +1,9 @@
 import Button from "./Button";
+import { navigation } from "../../lib/styles/ui";
+import { NavigationButtonsProps } from "@/types/components";
 
-interface NavigationButtonsProps {
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
+const { wrapper, button, previous, next, hidden } = navigation();
+
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   onPrevious,
@@ -14,14 +12,11 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isLastStep,
 }) => {
   return (
-    <div className="flex justify-between mt-[2rem]">
+    <div className={wrapper()}>
       <Button
         variant="outline"
         onClick={onPrevious}
-        className={`w-[7.5rem] h-[3rem] text-[#1F2A44] border-[0.0625rem] border-[#1F2A44] rounded-[0.75rem] hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-[0.125rem] focus:ring-[#22C55E] focus:ring-offset-[0.125rem] text-[1rem] font-medium ${
-          isFirstStep ? "invisible" : "visible"
-        }`}
-        style={{ fontFamily: "Inter, sans-serif" }}
+        className={`${button()} ${previous()} ${isFirstStep ? hidden() : ""}`}
         aria-label="Previous Step"
         disabled={isFirstStep}
       >
@@ -29,8 +24,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       </Button>
       <Button
         onClick={onNext}
-        className="w-[7.5rem] h-[3rem] bg-[#1F2A44] text-white rounded-full hover:bg-[#2f3a5f] transition-colors duration-200 focus:outline-none focus:ring-[0.125rem] focus:ring-[#22C55E] focus:ring-offset-[0.125rem] text-[1rem] font-medium"
-        style={{ fontFamily: "Inter, sans-serif" }}
+        className={`${button()} ${next()}`}
         aria-label={isLastStep ? "Finalize" : "Next Step"}
       >
         {isLastStep ? "Finalize" : "Next"}

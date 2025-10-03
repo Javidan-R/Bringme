@@ -1,7 +1,71 @@
-// src/components/steps/EducationStep.tsx
 import { useState, useCallback } from "react";
+import { tv } from "tailwind-variants";
 import NavigationButtons from "../common/NavigationButtons";
 import MultiSelect from "../common/MultiSelect";
+
+const educationStepVariants = tv({
+  slots: {
+    container: [
+      "flex",
+      "flex-col",
+      "gap-[1.5rem]",
+    ],
+    questionWrapper: [
+      "flex",
+      "flex-col",
+      "gap-[0.5rem]",
+    ],
+    label: [
+      "text-[#1F2A44]",
+      "font-medium",
+      "text-[0.875rem]",
+      "leading-[1.25rem]",
+      "md:text-[1rem]",
+      "md:leading-[1.5rem]",
+      "font-inter",
+    ],
+    input: [
+      "px-[1rem]",
+      "py-[0.75rem]",
+      "bg-[#E5DEDB]",
+      "rounded-[0.5rem]",
+      "text-[#1F2A44]",
+      "text-[1rem]",
+      "font-medium",
+      "placeholder-[#6B7280]",
+      "outline-none",
+      "focus:border-[#03BCA3]",
+      "focus:ring-[0.0625rem]",
+      "focus:ring-[#03BCA3]",
+      "font-inter",
+    ],
+    checkboxGroup: [
+      "flex",
+      "gap-[1rem]",
+    ],
+    checkboxLabel: [
+      "flex",
+      "items-center",
+      "gap-[0.5rem]",
+    ],
+    checkbox: [
+      "w-[1rem]",
+      "h-[1rem]",
+      "text-[#03BCA3]",
+    ],
+    checkboxText: [
+      "text-[0.875rem]",
+      "text-[#1F2A44]",
+      "font-inter",
+    ],
+    errorText: [
+      "text-[0.75rem]",
+      "text-red-500",
+      "mt-[0.25rem]",
+      "font-inter",
+    ],
+  },
+});
 
 interface EducationStepData {
   highestLevel: string;
@@ -22,8 +86,8 @@ interface EducationStepProps {
 const educationLevels = [
   "High School",
   "Trade School",
-  "Bachelor’s Degree",
-  "Master’s Degree",
+  "Bachelor's Degree",
+  "Master's Degree",
   "PhD",
 ];
 
@@ -42,6 +106,8 @@ const EducationStep: React.FC<EducationStepProps> = ({
   );
   const [educationFields, setEducationFields] = useState<string>(data.educationFields);
   const [errors, setErrors] = useState<{ highestLevel?: string }>({});
+
+  const styles = educationStepVariants();
 
   const validateForm = useCallback(() => {
     const newErrors: { highestLevel?: string } = {};
@@ -69,13 +135,11 @@ const EducationStep: React.FC<EducationStepProps> = ({
   }, [highestLevel, field, interestedInEducationVisa, educationFields, onSubmit, onNext, validateForm]);
 
   return (
-    <div className="flex flex-col gap-[1.5rem]">
-      {/* Q1: Highest level of education */}
-      <div className="flex flex-col gap-[0.5rem]">
+    <div className={styles.container()}>
+      <div className={styles.questionWrapper()}>
         <label
           htmlFor="highestLevel"
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
+          className={styles.label()}
         >
           What is your highest level of education? *
         </label>
@@ -91,21 +155,18 @@ const EducationStep: React.FC<EducationStepProps> = ({
         {errors.highestLevel && (
           <p
             id="highestLevel-error"
-            className="text-[0.75rem] text-red-500 mt-[0.25rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.errorText()}
           >
             {errors.highestLevel}
           </p>
         )}
       </div>
 
-      {/* Q2: Field of study (only if highestLevel is answered) */}
       {highestLevel && (
-        <div className="flex flex-col gap-[0.5rem]">
+        <div className={styles.questionWrapper()}>
           <label
             htmlFor="field"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.label()}
           >
             What did you study?
           </label>
@@ -115,45 +176,33 @@ const EducationStep: React.FC<EducationStepProps> = ({
             value={field}
             onChange={(e) => setField(e.target.value)}
             placeholder="Enter your field of study"
-            className="px-[1rem] py-[0.75rem] bg-[#E5DEDB] rounded-[0.5rem] text-[#1F2A44] text-[1rem] font-medium placeholder-[#6B7280] outline-none focus:border-[#03BCA3] focus:ring-[0.0625rem] focus:ring-[#03BCA3]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.input()}
           />
         </div>
       )}
 
-      {/* Q3: Interested in education visa? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
+      <div className={styles.questionWrapper()}>
+        <label className={styles.label()}>
           Are you interested in pursuing an education visa?
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.checkboxGroup()}>
+          <label className={styles.checkboxLabel()}>
             <input
               type="checkbox"
               checked={interestedInEducationVisa}
               onChange={(e) => setInterestedInEducationVisa(e.target.checked)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.checkbox()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes
-            </span>
+            <span className={styles.checkboxText()}>Yes</span>
           </label>
         </div>
       </div>
 
-      {/* Q4: Fields of education (only if interestedInEducationVisa is true) */}
       {interestedInEducationVisa && (
-        <div className="flex flex-col gap-[0.5rem]">
+        <div className={styles.questionWrapper()}>
           <label
             htmlFor="educationFields"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.label()}
           >
             What fields of education are you interested in?
           </label>
@@ -163,8 +212,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
             value={educationFields}
             onChange={(e) => setEducationFields(e.target.value)}
             placeholder="Enter fields of interest"
-            className="px-[1rem] py-[0.75rem] bg-[#E5DEDB] rounded-[0.5rem] text-[#1F2A44] text-[1rem] font-medium placeholder-[#6B7280] outline-none focus:border-[#03BCA3] focus:ring-[0.0625rem] focus:ring-[#03BCA3]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className={styles.input()}
           />
         </div>
       )}

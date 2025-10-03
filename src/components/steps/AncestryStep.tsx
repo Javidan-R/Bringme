@@ -1,8 +1,108 @@
-// src/components/steps/AncestryStep.tsx
 import { useState, useCallback } from "react";
-import NavigationButtons from "../common/NavigationButtons";
 import { Plus, X } from "lucide-react";
+import { tv } from "tailwind-variants";
+import NavigationButtons from "../common/NavigationButtons";
 import MultiSelect from "../common/MultiSelect";
+
+const ancestryStepVariants = tv({
+  slots: {
+    container: [
+      "flex",
+      "flex-col",
+      "gap-[1.5rem]",
+    ],
+    questionWrapper: [
+      "flex",
+      "flex-col",
+      "gap-[0.5rem]",
+    ],
+    label: [
+      "text-[#1F2A44]",
+      "font-medium",
+      "text-[0.875rem]",
+      "leading-[1.25rem]",
+      "md:text-[1rem]",
+      "md:leading-[1.5rem]",
+      "font-inter",
+    ],
+    checkboxGroup: [
+      "flex",
+      "gap-[1rem]",
+    ],
+    checkboxLabel: [
+      "flex",
+      "items-center",
+      "gap-[0.5rem]",
+    ],
+    checkbox: [
+      "w-[1rem]",
+      "h-[1rem]",
+      "text-[#03BCA3]",
+    ],
+    checkboxText: [
+      "text-[0.875rem]",
+      "text-[#1F2A44]",
+      "font-inter",
+    ],
+    relativesContainer: [
+      "flex",
+      "flex-col",
+      "gap-[1rem]",
+    ],
+    relativeRow: [
+      "flex",
+      "flex-col",
+      "gap-[0.5rem]",
+      "sm:flex-row",
+      "sm:gap-[1rem]",
+    ],
+    inputWrapper: [
+      "flex-1",
+    ],
+    input: [
+      "w-full",
+      "px-[1rem]",
+      "py-[0.75rem]",
+      "bg-[#E5DEDB]",
+      "rounded-[0.5rem]",
+      "text-[#1F2A44]",
+      "text-[1rem]",
+      "font-medium",
+      "placeholder-[#6B7280]",
+      "outline-none",
+      "focus:border-[#03BCA3]",
+      "focus:ring-[0.0625rem]",
+      "focus:ring-[#03BCA3]",
+      "font-inter",
+    ],
+    removeButton: [
+      "self-end",
+      "text-[#6B7280]",
+      "hover:text-[#1F2A44]",
+      "mt-[1.5rem]",
+    ],
+    removeIcon: [
+      "w-[1rem]",
+      "h-[1rem]",
+    ],
+    addButton: [
+      "flex",
+      "items-center",
+      "gap-[0.5rem]",
+      "text-[#1F2A44]",
+      "hover:text-[#03BCA3]",
+    ],
+    addIcon: [
+      "w-[1rem]",
+      "h-[1rem]",
+    ],
+    addText: [
+      "text-[0.875rem]",
+      "font-medium",
+      "font-inter",
+    ],
+  },
+});
 
 interface Relative {
   relative: string;
@@ -34,6 +134,8 @@ const AncestryStep: React.FC<AncestryStepProps> = ({
   const [hasAncestry, setHasAncestry] = useState<boolean>(data.hasAncestry);
   const [relatives, setRelatives] = useState<Relative[]>(data.relatives);
 
+  const styles = ancestryStepVariants();
+
   const handleAddRelative = () => {
     setRelatives([...relatives, { relative: "", passport: "" }]);
   };
@@ -57,43 +159,32 @@ const AncestryStep: React.FC<AncestryStepProps> = ({
   }, [hasAncestry, relatives, onSubmit, onNext]);
 
   return (
-    <div className="flex flex-col gap-[1.5rem]">
-      {/* Q1: Do you have ancestry that might qualify for a visa? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
+    <div className={styles.container()}>
+      <div className={styles.questionWrapper()}>
+        <label className={styles.label()}>
           Do you have ancestry that might qualify for a visa?
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.checkboxGroup()}>
+          <label className={styles.checkboxLabel()}>
             <input
               type="checkbox"
               checked={hasAncestry}
               onChange={(e) => setHasAncestry(e.target.checked)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.checkbox()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes
-            </span>
+            <span className={styles.checkboxText()}>Yes</span>
           </label>
         </div>
       </div>
 
-      {/* Relative, Passport, and + button section (only if hasAncestry is true) */}
       {hasAncestry && (
-        <div className="flex flex-col gap-[1rem]">
+        <div className={styles.relativesContainer()}>
           {relatives.map((relative, index) => (
-            <div key={index} className="flex flex-col gap-[0.5rem] sm:flex-row sm:gap-[1rem]">
-              <div className="flex-1">
+            <div key={index} className={styles.relativeRow()}>
+              <div className={styles.inputWrapper()}>
                 <label
                   htmlFor={`relative-${index}`}
-                  className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className={styles.label()}
                 >
                   Relative
                 </label>
@@ -103,15 +194,13 @@ const AncestryStep: React.FC<AncestryStepProps> = ({
                   value={relative.relative}
                   onChange={(e) => handleRelativeChange(index, "relative", e.target.value)}
                   placeholder="Enter relative"
-                  className="w-full px-[1rem] py-[0.75rem] bg-[#E5DEDB] rounded-[0.5rem] text-[#1F2A44] text-[1rem] font-medium placeholder-[#6B7280] outline-none focus:border-[#03BCA3] focus:ring-[0.0625rem] focus:ring-[#03BCA3]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className={styles.input()}
                 />
               </div>
-              <div className="flex-1">
+              <div className={styles.inputWrapper()}>
                 <label
                   htmlFor={`passport-${index}`}
-                  className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className={styles.label()}
                 >
                   Passport
                 </label>
@@ -127,23 +216,20 @@ const AncestryStep: React.FC<AncestryStepProps> = ({
               </div>
               <button
                 onClick={() => handleRemoveRelative(index)}
-                className="self-end text-[#6B7280] hover:text-[#1F2A44] mt-[1.5rem]"
+                className={styles.removeButton()}
                 aria-label={`Remove relative ${index + 1}`}
               >
-                <X className="w-[1rem] h-[1rem]" />
+                <X className={styles.removeIcon()} />
               </button>
             </div>
           ))}
           <button
             onClick={handleAddRelative}
-            className="flex items-center gap-[0.5rem] text-[#1F2A44] hover:text-[#03BCA3]"
+            className={styles.addButton()}
             aria-label="Add another relative"
           >
-            <Plus className="w-[1rem] h-[1rem]" />
-            <span
-              className="text-[0.875rem] font-medium"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
+            <Plus className={styles.addIcon()} />
+            <span className={styles.addText()}>
               Add another relative
             </span>
           </button>

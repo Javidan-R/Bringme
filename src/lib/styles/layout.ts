@@ -1,0 +1,245 @@
+// Design System: StepIndicator Variants
+import { tv } from "tailwind-variants"; 
+export const stepIndicatorVariants = tv({
+  slots: {
+    container: [
+      "flex",
+      "content-center",
+      "items-center",
+      "gap-2",
+      "bg-[#EEE8E6]",
+      "px-3",
+      "py-2",
+      "border-white",
+      "rounded-[250px]",
+      "shadow-sm",
+    ],
+    dot: [
+      "rounded-full",
+      "transition-all",
+      "duration-300",
+    ],
+  },
+  variants: {
+    dotState: {
+      inactive: {
+        dot: "w-3 h-3 bg-gray-300",
+      },
+      active: {
+        dot: "w-4 h-4 bg-white border-2 border-green-500 shadow-md scale-105",
+      },
+      completed: {
+        dot: "w-3 h-3 bg-green-500",
+      },
+    },
+  },
+});
+
+// Design System: LeftSidebar Variants
+export const leftSidebarVariants = tv({
+  slots: {
+    mobileHeader: [
+      "flex",
+      "flex-col",
+      "px-4",
+      "py-3",
+      "bg-[#FCF7F6]",
+      "shadow-sm",
+      "md:hidden",
+      "fixed",
+      "top-0",
+      "left-0",
+      "w-full",
+      "z-50",
+      "transition-opacity",
+      "duration-300",
+      "border-b",
+      "border-gray-200",
+    ],
+    mobileHeaderRow: [
+      "flex",
+      "items-center",
+      "justify-between",
+    ],
+    logo: [
+      "w-[120px]",
+      "md:w-[150px]",
+    ],
+    setupLabel: [
+      "text-[1rem]",
+      "font-semibold",
+      "text-gray-800",
+      "font-inter",
+    ],
+    setupGroup: [
+      "flex",
+      "items-center",
+      "gap-3",
+    ],
+    menuButton: [
+      "text-gray-800",
+      "focus:outline-none",
+      "focus:ring-2",
+      "focus:ring-green-500",
+      "rounded",
+      "p-1",
+    ],
+    menuIcon: [
+      "w-6",
+      "h-6",
+    ],
+    sidebar: [
+      "flex",
+      "flex-col",
+      "py-6",
+      "px-6",
+      "w-full",
+      "bg-[#FCF7F6]",
+      "shadow-lg",
+      "fixed",
+      "top-0",
+      "left-0",
+      "h-full",
+      "z-40",
+      "transition-transform",
+      "duration-300",
+      "ease-in-out",
+      "md:translate-x-0",
+      "md:w-[280px]",
+      "md:h-screen",
+      "md:top-0",
+      "md:left-0",
+      "md:shadow-md",
+      "md:flex",
+    ],
+    sidebarHeader: [
+      "flex",
+      "items-center",
+      "justify-between",
+      "mb-10",
+    ],
+    closeButton: [
+      "text-gray-800",
+      "focus:outline-none",
+      "focus:ring-2",
+      "focus:ring-green-500",
+      "rounded",
+      "md:hidden",
+      "p-1",
+    ],
+    sectionTitle: [
+      "text-xs",
+      "font-medium",
+      "text-gray-500",
+      "uppercase",
+      "tracking-wide",
+    ],
+    sectionTitleWrapper: [
+      "mb-4",
+    ],
+    stepsContainer: [
+      "flex",
+      "flex-col",
+      "gap-1",
+      "w-full",
+    ],
+    footerContainer: [
+      "mt-auto",
+    ],
+    supportDropdownWrapper: [
+      "relative",
+    ],
+    supportButton: [
+      "flex",
+      "items-center",
+      "gap-3",
+      "py-3",
+      "text-gray-800",
+      "hover:text-gray-600",
+      "w-full",
+      "focus:outline-none",
+      "focus:ring-2",
+      "focus:ring-green-500",
+      "rounded",
+    ],
+    supportIcon: [
+      "w-5",
+      "h-5",
+    ],
+    supportLabel: [
+      "text-sm",
+      "font-medium",
+    ],
+    chevronIcon: [
+      "w-4",
+      "h-4",
+      "ml-auto",
+      "transition-transform",
+      "duration-200",
+    ],
+    dropdownMenu: [
+      "absolute",
+      "bottom-full",
+      "left-0",
+      "w-full",
+      "bg-white",
+      "shadow-lg",
+      "rounded-lg",
+      "py-2",
+      "mb-2",
+      "z-50",
+    ],
+    dropdownItem: [
+      "w-full",
+      "text-left",
+      "px-4",
+      "py-2",
+      "text-sm",
+      "text-gray-800",
+      "hover:bg-gray-100",
+      "focus:outline-none",
+      "focus:bg-gray-100",
+    ],
+    logoutButton: [
+      "flex",
+      "items-center",
+      "gap-3",
+      "py-3",
+      "text-gray-800",
+      "hover:text-gray-600",
+      "w-full",
+      "focus:outline-none",
+      "focus:ring-2",
+      "focus:ring-green-500",
+      "rounded",
+    ],
+    logoutIcon: [
+      "w-5",
+      "h-5",
+    ],
+    logoutLabel: [
+      "text-sm",
+      "font-medium",
+    ],
+  },
+  variants: {
+    menuState: {
+      open: {
+        mobileHeader: "opacity-0 pointer-events-none",
+        sidebar: "translate-x-0",
+      },
+      closed: {
+        mobileHeader: "opacity-100",
+        sidebar: "-translate-x-full",
+      },
+    },
+    chevronState: {
+      open: {
+        chevronIcon: "rotate-180",
+      },
+      closed: {
+        chevronIcon: "",
+      },
+    },
+  },
+});

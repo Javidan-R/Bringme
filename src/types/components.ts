@@ -46,7 +46,54 @@ export  interface StepIndicatorProps {
 export interface StepItemProps {
   stepNumber: number;
   label: string;
-  isActive: boolean; 
+  isActive: boolean;
   isCompleted: boolean;
   onClick: () => void;
+}
+
+export interface ModalQuestionProps {
+  title: string;
+  question: string;
+  onSubmit: () => void;
+  onClose: () => void;
+}
+ 
+export interface MultiSelectProps {
+  id?: string;
+  values: string[];
+  onChange: (values: string[]) => void;
+  placeholder: string;
+  options?: string[];
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+
+export interface NavigationButtonsProps {
+  onPrevious: () => void;
+  onNext: () => void;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+}
+
+export interface NumberInputProps {
+  id?: string;
+  value: number | null;
+  onChange: (value: number | null) => void;
+  placeholder: string;
+  icon?: React.ReactNode | null;
+  min?: number;
+  max?: number;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export interface ToggleButtonsProps {
+  value: boolean;
+  onChange: (value: boolean) => void;
+  labels?: [string, string];
 }
