@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
-import { multiSelect } from "../../lib/styles/ui";
+import { multiSelect } from "../../lib/styles";
 import { MultiSelectProps } from "@/types/components";
 
 const { wrapper, container, tag, tagText, removeButton, input, dropdown, option } = multiSelect();

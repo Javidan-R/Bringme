@@ -1,7 +1,7 @@
-// Login.tsx
+// src/pages/Login.tsx
 import { Link, useNavigate } from "react-router-dom";
 import { useSignIn, useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Button from "../components/common/Button";
@@ -11,18 +11,9 @@ import GoogleIcon from "../assets/icons/google.svg";
 import { useAppDispatch } from "../hooks";
 import { setUser } from "../features/authSlice";
 import { loginVariants } from "../lib/styles/login";
+import { ClerkAPIError, ClerkErrorDetail } from "../types/pages";
 
-interface ClerkErrorDetail {
-  message: string;
-  longMessage?: string;
-  code?: string;
-}
-
-interface ClerkAPIError {
-  errors?: ClerkErrorDetail[];
-  message?: string;
-}
-
+// Clerk API Xətasını Yoxlama Funksiyası (dəyişməz qalır)
 function isClerkAPIError(error: unknown): error is ClerkAPIError {
   if (typeof error !== "object" || error === null) return false;
   const err = error as ClerkAPIError;
@@ -48,23 +39,31 @@ const Login: React.FC = () => {
   }>({});
 
   const navigate = useNavigate();
-  const { isLoaded, signIn, setActive } = useSignIn();
+  // isPending əlavə edildi
+  const { isLoaded, signIn, setActive } = useSignIn(); 
   const { user, isSignedIn } = useUser();
   const dispatch = useAppDispatch();
   const styles = loginVariants();
 
+  // Yüklənmə vəziyyətini idarə edən effekt
   useEffect(() => {
+    // isLoaded = Clerk-in yüklənməsi bitib.
+    // isSignedIn = İstifadəçi artıq daxil olub.
     if (isLoaded && isSignedIn && user) {
+      // İstifadəçi məlumatlarını Redux-a yaz
       dispatch(
         setUser({
           userId: user.id,
           email: user.primaryEmailAddress?.emailAddress || "",
         })
       );
-      navigate("/onboarding");
+      // Onboarding səhifəsinə yönləndir
+      navigate("/onboarding", { replace: true });
     }
   }, [isLoaded, isSignedIn, user, dispatch, navigate]);
 
+
+  // Əlavə yüklənmə vəziyyəti: Clerk hook-ları yüklənənə qədər
   if (!isLoaded) {
     return (
       <div className={styles.loadingContainer()}>
@@ -72,70 +71,87 @@ const Login: React.FC = () => {
       </div>
     );
   }
-
-  const validateForm = () => {
+  
+  // Validasiya funksiyası
+  const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};
     if (!email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email))
       newErrors.email = "Please enter a valid email address";
     if (!password) newErrors.password = "Password is required";
     return newErrors;
-  };
+  }, [email, password]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const validationErrors = validateForm();
+      
+      // Bütün server xətalarını silmək, yalnız validasiya xətalarını göstərmək
+      setErrors(prev => ({ ...validationErrors, server: undefined }));
 
-    setErrors({});
-    if (!signIn) {
-      setErrors({
-        server: "Login service is not available. Please try again later.",
-      });
-      return;
-    }
-
-    try {
-      const result = await signIn.create({ identifier: email, password });
-
-      if (result.status === "complete") {
-        if (setActive) await setActive({ session: result.createdSessionId });
-      } else if (
-        result.status === "needs_first_factor" ||
-        result.status === "needs_second_factor"
-      ) {
-        setErrors({
-          server:
-            "Multi-factor authentication is required. Please complete the additional steps.",
-        });
-      } else {
-        setErrors({
-          server: "Login failed. Please check your credentials or try again.",
-        });
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
       }
-    } catch (rawError: unknown) {
-      let serverMessage = "An error occurred during login. Please try again.";
-      if (isClerkAPIError(rawError)) {
-        serverMessage =
-          rawError.errors?.[0]?.message || rawError.message || serverMessage;
-      } else if (rawError instanceof Error) serverMessage = rawError.message;
-      setErrors({ server: serverMessage });
-    }
-  };
 
-  const handleGoogleSignIn = async () => {
+      if (!signIn) {
+        setErrors({
+          server: "Login service is not available. Please try again later.",
+        });
+        return;
+      }
+
+      try {
+        const result = await signIn.create({ identifier: email, password });
+
+        if (result.status === "complete") {
+          // Giriş uğurludur, aktiv sessiyanı təyin et
+          if (setActive) await setActive({ session: result.createdSessionId });
+          // Yönləndirmə artıq yuxarıdakı useEffect tərəfindən idarə olunur.
+        } else if (
+          result.status === "needs_first_factor" ||
+          result.status === "needs_second_factor"
+        ) {
+          setErrors({
+            server:
+              "Multi-factor authentication is required. Please complete the additional steps.",
+          });
+        } else {
+          setErrors({
+            server: "Login failed. Please check your credentials or try again.",
+          });
+        }
+      } catch (rawError: unknown) {
+        let serverMessage = "An error occurred during login. Please try again.";
+        if (isClerkAPIError(rawError)) {
+          // Clerk xətalarını daha dəqiq tut
+          serverMessage =
+            rawError.errors?.[0]?.message || rawError.message || serverMessage;
+        } else if (rawError instanceof Error) {
+            serverMessage = rawError.message;
+        }
+        setErrors({ server: serverMessage });
+      }
+    },
+    [email, password, validateForm, signIn, setActive]
+  );
+
+  const handleGoogleSignIn = useCallback(async () => {
+    // Server xətasını sıfırla
+    setErrors(prev => ({ ...prev, server: undefined }));
+    
     if (!signIn) {
       setErrors({
         server: "Login service is not available. Please try again later.",
       });
       return;
     }
+    
     try {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
+        // Hər iki redirectUrl onboarding-ə yönləndirir
         redirectUrl: "/onboarding",
         redirectUrlComplete: "/onboarding",
       });
@@ -147,7 +163,7 @@ const Login: React.FC = () => {
       } else if (rawError instanceof Error) serverMessage = rawError.message;
       setErrors({ server: serverMessage });
     }
-  };
+  }, [signIn]);
 
   // Framer Motion animation variants
   const inputVariant = {
@@ -159,19 +175,22 @@ const Login: React.FC = () => {
     }),
   };
 
-  const buttonVariant = {
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
-    // tap: { scale: 0.95, transition: { duration: 0.1 } },
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+
+  // Yeni: Giriş düyməsi üçün ayrı variant
+  const loginButtonVariant = {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.4 } },
   };
+
+  const isDisabled = !signIn;
 
   return (
     <LoginContainer>
       <motion.div
         className={styles.container()}
         initial="hidden"
-        animate="visible"
+        // 'isPending' istifadə olunaraq əlavə disabled vəziyyəti idarə oluna bilər.
+        animate="visible" 
         variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
       >
         <motion.h1 className={styles.title()} variants={inputVariant}>
@@ -183,7 +202,7 @@ const Login: React.FC = () => {
             variant="outline"
             className={styles.googleButton()}
             onClick={handleGoogleSignIn}
-            disabled={!signIn}
+            disabled={isDisabled} // Yeni: isDisabled istifadə olunur
           >
             <img src={GoogleIcon} alt="Google" className={styles.googleIcon()} />
             Login with Google
@@ -203,23 +222,26 @@ const Login: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className={styles.form()}>
+          {/* Email input: trim() yalnız burada tətbiq olunur */}
           <motion.div className={styles.inputWrapper()} custom={0.2} variants={inputVariant}>
             <Input
               label="E-mail address"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value.trim())}
+              onChange={(e) => setEmail(e.target.value.trim())} 
               error={errors.email}
               placeholder="Enter your email"
               autoComplete="email"
             />
           </motion.div>
+          
+          {/* Password input: trim() SİLİNDİ */}
           <motion.div className={styles.inputWrapper()} custom={0.3} variants={inputVariant}>
             <Input
               label="Password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)} // YALNIZ setPassword(e.target.value)
               error={errors.password}
               placeholder="Enter your password"
               autoComplete="current-password"
@@ -232,8 +254,15 @@ const Login: React.FC = () => {
             </Link>
           </div>
 
-          <motion.div className={styles.buttonWrapper()} variants={buttonVariant} whileHover="hover" whileTap="tap">
-            <Button type="submit" variant="primary" disabled={!signIn}>
+          <motion.div 
+            className={styles.buttonWrapper()} 
+            variants={loginButtonVariant} // Yeni, sadə variant
+            initial="initial"
+            animate="animate"
+            whileHover="hover" 
+            whileTap="tap"
+          >
+            <Button type="submit" variant="primary" disabled={isDisabled}>
               Login
             </Button>
           </motion.div>

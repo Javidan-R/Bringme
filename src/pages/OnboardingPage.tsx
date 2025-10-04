@@ -1,63 +1,23 @@
 // src/pages/OnboardingPage.tsx
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useUser, useClerk } from "@clerk/clerk-react";
-import LeftSidebar from "../components/layout/LeftSidebar";
-import ModalQuestion from "../components/common/ModalQuestion";
-import GeneralStep from "../components/steps/GeneralStep";
-import FamilyStep from "../components/steps/FamilyStep";
-import EducationStep from "../components/steps/EducationStep";
-import WorkStep from "../components/steps/WorkStep";
-import MoneyStep from "../components/steps/MoneyStep";
-import AncestryStep from "../components/steps/AncestryStep";
-
 import { useAppSelector, useAppDispatch } from "../hooks";
 import {
-  updateFormData,
-  setCurrentStep,
-  resetFormData,
+  // updateFormData artıq lazım deyil, çünki hər komponent özü Redux-u yeniləyir.
+  setCurrentStep, 
+  resetFormData, 
+  nextStep, // Yeni: Redux naviqasiya action-larını import et
+  previousStep, // Yeni: Redux naviqasiya action-larını import et
 } from "../features/onboardingSlice";
 import { setUser, clearUser } from "../features/authSlice";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import PackageSelectionPage from "../components/PackageSelectionPage";
-import FinalizeProfileModal from "../components/FinalizeProfileModal";
-import { onboardingVariants } from "../lib/styles/onboarding";
-import { motion } from "framer-motion";
-
-interface FormData {
-  general: {
-    nationality: string[];
-    age: number | null;
-    homeSize: number | null;
-    bedrooms: number | null;
-    regions: string[];
-  };
-  family: {
-    hasPartner: string;
-    partnerNationality: string[];
-    hasChildren: boolean;
-  };
-  education: {
-    highestLevel: string;
-    field: string;
-    interestedInEducationVisa: boolean;
-    educationFields: string;
-  };
-  work: {
-    remoteWork: string;
-    passiveIncome: number | null;
-    jobType: string;
-    monthlyIncome: number | null;
-    interestedInBusinessVisa: boolean;
-  };
-  money: {
-    interestedInInvestmentVisa: boolean;
-    savings: number | null;
-  };
-  ancestry: {
-    hasAncestry: boolean;
-    relatives: { relative: string; passport: string }[];
-  };
-}
+import {ModalQuestion} from "../components/common";
+import { onboardingVariants } from "../lib/styles";
+import { AncestryStep, EducationStep, FamilyStep, GeneralStep, MoneyStep, WorkStep } from "../components/steps";
+import { FinalizeProfileModal, PackageSelectionPage } from "../components";
+import { LeftSidebar } from "../components/layout";
+// FormData type artıq step-ləri birləşdirmək üçün lazım deyil, store-da birləşib.
 
 const steps = ["General", "Family", "Education", "Work", "Funds", "Ancestry"];
 
@@ -67,9 +27,9 @@ const OnboardingPage: React.FC = () => {
   const { user, isSignedIn, isLoaded } = useUser();
   const { signOut } = useClerk();
 
-  const { formData, currentStep } = useAppSelector((state) => state.onboarding);
+  // Yalnız currentStep-i izləmək kifayətdir, çünki step komponentləri özləri datanı alacaq.
+  const { currentStep } = useAppSelector((state) => state.onboarding);
 
-  // Modal initially true (shows on first load)
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
@@ -97,17 +57,11 @@ const OnboardingPage: React.FC = () => {
     setIsModalOpen(false);
   }, []);
 
-  const handleStepSubmit = useCallback(
-    (stepData: Partial<FormData[keyof FormData]>, stepName: keyof FormData) => {
-      dispatch(updateFormData({ stepName, data: stepData }));
-    },
-    [dispatch]
-  );
-
+  
   const handleNext = useCallback(() => {
     if (isModalOpen) return;
     if (currentStep < steps.length) {
-      dispatch(setCurrentStep(currentStep + 1));
+      dispatch(nextStep()); 
     } else {
       setShowFinalizeModal(true);
     }
@@ -115,7 +69,7 @@ const OnboardingPage: React.FC = () => {
 
   const handlePrevious = useCallback(() => {
     if (isModalOpen) return;
-    if (currentStep > 1) dispatch(setCurrentStep(currentStep - 1));
+    if (currentStep > 1) dispatch(previousStep());
   }, [currentStep, dispatch, isModalOpen]);
 
   const handleStepNavigation = useCallback(
@@ -141,67 +95,34 @@ const OnboardingPage: React.FC = () => {
     navigate("/login", { replace: true });
   }, [signOut, dispatch, navigate]);
 
+  // <<< Dəyişiklik 4: renderStepContent funksiyası komponentlərə yalnız naviqasiya prop-larını ötürür. >>>
   const renderStepContent = useMemo(() => {
     const props = {
+      // handlePrevious və handleNext artıq sadəcə naviqasiya action-larını dispatch edir.
       onPrevious: handlePrevious,
-      onNext: handleNext,
+      onNext: handleNext, 
       isFirstStep: currentStep === 1,
       isLastStep: currentStep === steps.length,
     };
 
     switch (currentStep) {
       case 1:
-        return (
-          <GeneralStep
-            data={formData.general}
-            onSubmit={(data) => handleStepSubmit(data, "general")}
-            {...props}
-          />
-        );
+        // 'data' və 'onSubmit' prop-ları silinib.
+        return <GeneralStep {...props} />;
       case 2:
-        return (
-          <FamilyStep
-            data={formData.family}
-            onSubmit={(data) => handleStepSubmit(data, "family")}
-            {...props}
-          />
-        );
+        return <FamilyStep {...props} />;
       case 3:
-        return (
-          <EducationStep
-            data={formData.education}
-            onSubmit={(data) => handleStepSubmit(data, "education")}
-            {...props}
-          />
-        );
+        return <EducationStep {...props} />;
       case 4:
-        return (
-          <WorkStep
-            data={formData.work}
-            onSubmit={(data) => handleStepSubmit(data, "work")}
-            {...props}
-          />
-        );
+        return <WorkStep {...props} />;
       case 5:
-        return (
-          <MoneyStep
-            data={formData.money}
-            onSubmit={(data) => handleStepSubmit(data, "money")}
-            {...props}
-          />
-        );
+        return <MoneyStep {...props} />;
       case 6:
-        return (
-          <AncestryStep
-            data={formData.ancestry}
-            onSubmit={(data) => handleStepSubmit(data, "ancestry")}
-            {...props}
-          />
-        );
+        return <AncestryStep {...props} />;
       default:
         return null;
     }
-  }, [currentStep, formData, handleNext, handlePrevious, handleStepSubmit]);
+  }, [currentStep, handleNext, handlePrevious]); // 'formData' və 'handleStepSubmit' dependencies silindi
 
   if (!isLoaded) {
     return (

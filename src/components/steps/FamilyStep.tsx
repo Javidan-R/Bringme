@@ -1,115 +1,27 @@
 import { useState, useCallback } from "react";
-import { tv } from "tailwind-variants";
+import { useSelector, useDispatch } from 'react-redux';
 import NavigationButtons from "../common/NavigationButtons";
 import MultiSelect from "../common/MultiSelect";
-
-const familyStepVariants = tv({
-  slots: {
-    container: [
-      "flex",
-      "flex-col",
-      "gap-[1.5rem]",
-    ],
-    questionWrapper: [
-      "flex",
-      "flex-col",
-      "gap-[0.5rem]",
-    ],
-    label: [
-      "text-[#1F2A44]",
-      "font-medium",
-      "text-[0.875rem]",
-      "leading-[1.25rem]",
-      "md:text-[1rem]",
-      "md:leading-[1.5rem]",
-      "font-inter",
-    ],
-    radioGroup: [
-      "flex",
-      "gap-[1rem]",
-    ],
-    radioLabel: [
-      "flex",
-      "items-center",
-      "gap-[0.5rem]",
-    ],
-    radio: [
-      "w-[1rem]",
-      "h-[1rem]",
-      "text-[#03BCA3]",
-    ],
-    radioText: [
-      "text-[0.875rem]",
-      "text-[#1F2A44]",
-      "font-inter",
-    ],
-    checkboxGroup: [
-      "flex",
-      "gap-[1rem]",
-    ],
-    checkboxLabel: [
-      "flex",
-      "items-center",
-      "gap-[0.5rem]",
-    ],
-    checkbox: [
-      "w-[1rem]",
-      "h-[1rem]",
-      "text-[#03BCA3]",
-    ],
-    checkboxText: [
-      "text-[0.875rem]",
-      "text-[#1F2A44]",
-      "font-inter",
-    ],
-    errorText: [
-      "text-[0.75rem]",
-      "text-red-500",
-      "mt-[0.25rem]",
-      "font-inter",
-    ],
-  },
-});
-
-interface FamilyStepData {
-  hasPartner: string;
-  partnerNationality: string[];
-  hasChildren: boolean;
-}
-
-interface FamilyStepProps {
-  data: FamilyStepData;
-  onSubmit: (data: FamilyStepData) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
+import { familyStepVariants } from "../../lib/styles";
+import { RootState, AppDispatch } from '../../store';
+import { updateFamilyStep, nextStep, previousStep } from "../../features/stepSlice";
+import { StepRTKProps } from "../../types/steps";
 
 const nationalities = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Australia",
-  "Germany",
-  "France",
-  "India",
-  "China",
-  "Brazil",
-  "South Africa",
+  "United States", "Canada", "United Kingdom", "Australia", "Germany",
+  "France", "India", "China", "Brazil", "South Africa",
 ];
 
-const FamilyStep: React.FC<FamilyStepProps> = ({
-  data,
-  onSubmit,
-  onPrevious,
-  onNext,
+const FamilyStep: React.FC<StepRTKProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const [hasPartner, setHasPartner] = useState<string>(data.hasPartner);
-  const [partnerNationality, setPartnerNationality] = useState<string[]>(data.partnerNationality);
-  const [hasChildren, setHasChildren] = useState<boolean>(data.hasChildren);
+  const dispatch = useDispatch<AppDispatch>();
+  const initialData = useSelector((state: RootState) => state.stepForm);
+
+  const [hasPartner, setHasPartner] = useState<string>(initialData.hasPartner);
+  const [partnerNationality, setPartnerNationality] = useState<string[]>(initialData.partnerNationality);
+  const [hasChildren, setHasChildren] = useState<boolean>(initialData.hasChildren);
   const [errors, setErrors] = useState<{ hasPartner?: string }>({});
 
   const styles = familyStepVariants();
@@ -130,13 +42,21 @@ const FamilyStep: React.FC<FamilyStepProps> = ({
     }
 
     setErrors({});
-    onSubmit({
+    
+    // 1. Save data to Redux
+    dispatch(updateFamilyStep({
       hasPartner,
-      partnerNationality,
+      partnerNationality: hasPartner !== "No" ? partnerNationality : [],
       hasChildren,
-    });
-    onNext();
-  }, [hasPartner, partnerNationality, hasChildren, onSubmit, onNext, validateForm]);
+    }));
+    
+    // 2. Navigate
+    dispatch(nextStep());
+  }, [hasPartner, partnerNationality, hasChildren, validateForm, dispatch]);
+
+  const handlePrevious = useCallback(() => {
+    dispatch(previousStep());
+  }, [dispatch]);
 
   return (
     <div className={styles.container()}>
@@ -226,7 +146,7 @@ const FamilyStep: React.FC<FamilyStepProps> = ({
       </div>
 
       <NavigationButtons
-        onPrevious={onPrevious}
+        onPrevious={handlePrevious}
         onNext={handleSubmit}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}

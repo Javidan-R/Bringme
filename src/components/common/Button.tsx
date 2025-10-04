@@ -2,8 +2,7 @@ import React from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import clsx from "clsx";
 import { ButtonProps } from "../../types/components";
-import { button } from "../../lib/styles/ui";
-
+import { button } from "../../lib/styles";
 type ArrowDirection = "left" | "right";
 
 const Button: React.FC<ButtonProps> = ({

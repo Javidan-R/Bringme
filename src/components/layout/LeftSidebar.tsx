@@ -3,12 +3,8 @@ import { X, Menu, ChevronDown } from "lucide-react";
 import Logo from "../../assets/images/BringMeAbroad_Logo.png";
 import StepItem from "../common/StepItem";
 import { leftSidebarVariants, stepIndicatorVariants } from "../../lib/styles/layout";
+import { LeftSidebarProps, StepIndicatorProps } from "../../types/components";
 
-
-interface StepIndicatorProps {
-  steps: string[];
-  currentStep: number;
-}
 
 const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => {
   const styles = stepIndicatorVariants();
@@ -32,14 +28,6 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => 
   );
 };
 
-interface LeftSidebarProps {
-  steps?: string[];
-  currentStep?: number;
-  isMenuOpen: boolean;
-  setIsMenuOpen: (isOpen: boolean) => void;
-  onStepClick?: (stepNumber: number) => void;
-  onLogout: () => void;
-}
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   steps = [],

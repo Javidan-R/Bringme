@@ -1,5 +1,5 @@
 import { Check } from "../../assets/icons/Check";
-import { checkbox } from "../../lib/styles/ui";
+import { checkbox } from "../../lib/styles";
 import clsx from "clsx";
 import { CheckboxProps } from "../../types/components";
 

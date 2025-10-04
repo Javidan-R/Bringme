@@ -1,49 +1,47 @@
-// src/components/steps/WorkStep.tsx
 import { useState, useCallback } from "react";
+import { useSelector, useDispatch } from 'react-redux';
 import NavigationButtons from "../common/NavigationButtons";
 import NumberInput from "../common/NumberInput";
+import { workStepVariants } from "../../lib/styles";
+import { Info } from "lucide-react";
+import { RootState, AppDispatch } from '../../store';
+import { nextStep, previousStep, updateWorkStep } from "../../features/stepSlice";
+import { StepRTKProps } from "../../types/steps";
 
-interface WorkStepData {
-  remoteWork: string;
-  passiveIncome: number | null;
-  jobType: string;
-  monthlyIncome: number | null;
-  interestedInBusinessVisa: boolean;
-}
 
-interface WorkStepProps {
-  data: WorkStepData;
-  onSubmit: (data: WorkStepData) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
 
-const WorkStep: React.FC<WorkStepProps> = ({
-  data,
-  onSubmit,
-  onPrevious,
-  onNext,
+const WorkStep: React.FC<StepRTKProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const [remoteWork, setRemoteWork] = useState<string>(data.remoteWork);
-  const [passiveIncome, setPassiveIncome] = useState<number | null>(data.passiveIncome);
-  const [jobType, setJobType] = useState<string>(data.jobType);
-  const [monthlyIncome, setMonthlyIncome] = useState<number | null>(data.monthlyIncome);
+  const dispatch = useDispatch<AppDispatch>();
+  const initialData = useSelector((state: RootState) => state.stepForm);
+
+  const [remoteWork, setRemoteWork] = useState<string>(initialData.remoteWork);
+  const [passiveIncome, setPassiveIncome] = useState<number | null>(initialData.passiveIncome);
+  const [jobType, setJobType] = useState<string>(initialData.jobType);
+  const [monthlyIncome, setMonthlyIncome] = useState<number | null>(initialData.monthlyIncome);
   const [interestedInBusinessVisa, setInterestedInBusinessVisa] = useState<boolean>(
-    data.interestedInBusinessVisa
+    initialData.interestedInBusinessVisa
   );
-  const [errors, setErrors] = useState<{ remoteWork?: string }>({});
+  const [errors, setErrors] = useState<{ remoteWork?: string; monthlyIncome?: string }>({});
+
+  const styles = workStepVariants();
 
   const validateForm = useCallback(() => {
-    const newErrors: { remoteWork?: string } = {};
-    if (!remoteWork) {
-      newErrors.remoteWork = "Please select an option";
+    const newErrors: { remoteWork?: string; monthlyIncome?: string } = {};
+    if (!remoteWork) newErrors.remoteWork = "Please select an option";
+    if (remoteWork === "Yes" && monthlyIncome === null) {
+      newErrors.monthlyIncome = "Monthly income is required for remote workers";
     }
     return newErrors;
-  }, [remoteWork]);
+  }, [remoteWork, monthlyIncome]);
+
+  const getIncomeInfo = () => {
+    if (remoteWork === "Retired") return "This helps us identify retirement visa options suitable for your situation.";
+    if (remoteWork === "Yes") return "Income information helps determine eligibility for digital nomad and freelancer visas.";
+    return null;
+  };
 
   const handleSubmit = useCallback(() => {
     const validationErrors = validateForm();
@@ -53,94 +51,98 @@ const WorkStep: React.FC<WorkStepProps> = ({
     }
 
     setErrors({});
-    onSubmit({
-      remoteWork,
-      passiveIncome,
-      jobType,
-      monthlyIncome,
-      interestedInBusinessVisa,
-    });
-    onNext();
-  }, [remoteWork, passiveIncome, jobType, monthlyIncome, interestedInBusinessVisa, onSubmit, onNext, validateForm]);
+    
+    // 1. Save data to Redux (with conditional clearing)
+    dispatch(updateWorkStep({
+        remoteWork,
+        passiveIncome: remoteWork === "Retired" ? passiveIncome : null,
+        jobType: remoteWork === "Yes" ? jobType : "",
+        monthlyIncome: remoteWork === "Yes" ? monthlyIncome : null,
+        interestedInBusinessVisa,
+    }));
+    
+    // 2. Navigate
+    dispatch(nextStep());
+  }, [remoteWork, passiveIncome, jobType, monthlyIncome, interestedInBusinessVisa, validateForm, dispatch]);
+
+  const handlePrevious = useCallback(() => {
+    dispatch(previousStep());
+  }, [dispatch]);
 
   return (
-    <div className="flex flex-col gap-[1.5rem]">
+    <div className={styles.container()}>
       {/* Q1: Do you work remotely? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          Do you work remotely? *
+      <div className={styles.questionWrapper()} style={{ animationDelay: "100ms" }}>
+        <label className={styles.label()}>
+          Do you work remotely? <span className={styles.required()}>*</span>
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.radioGroup()}>
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="remoteWork"
               value="Yes"
               checked={remoteWork === "Yes"}
-              onChange={(e) => setRemoteWork(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              onChange={(e) => {
+                setRemoteWork(e.target.value);
+                setErrors({ ...errors, remoteWork: undefined });
+              }}
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes
-            </span>
+            <span className={styles.radioText()}>Yes</span>
           </label>
-          <label className="flex items-center gap-[0.5rem]">
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="remoteWork"
               value="No"
               checked={remoteWork === "No"}
-              onChange={(e) => setRemoteWork(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              onChange={(e) => {
+                setRemoteWork(e.target.value);
+                setErrors({ ...errors, remoteWork: undefined });
+              }}
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              No
-            </span>
+            <span className={styles.radioText()}>No</span>
           </label>
-          <label className="flex items-center gap-[0.5rem]">
+          <label className={styles.radioLabel()}>
             <input
               type="radio"
               name="remoteWork"
               value="Retired"
               checked={remoteWork === "Retired"}
-              onChange={(e) => setRemoteWork(e.target.value)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              onChange={(e) => {
+                setRemoteWork(e.target.value);
+                setErrors({ ...errors, remoteWork: undefined });
+              }}
+              className={styles.radio()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Retired
-            </span>
+            <span className={styles.radioText()}>Retired</span>
           </label>
         </div>
         {errors.remoteWork && (
-          <p
-            className="text-[0.75rem] text-red-500 mt-[0.25rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
+          <p className={styles.errorText()}>
             {errors.remoteWork}
           </p>
         )}
       </div>
 
+      {/* Info Card */}
+      {getIncomeInfo() && (
+        <div className={styles.infoCard()}>
+          <div className="flex items-start gap-2">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className={styles.infoText()}>
+              {getIncomeInfo()}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Q2: Passive income (only if remoteWork is "Retired") */}
       {remoteWork === "Retired" && (
-        <div className="flex flex-col gap-[0.5rem]">
-          <label
-            htmlFor="passiveIncome"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
+        <div className={styles.questionWrapper()} style={{ animationDelay: "200ms" }}>
+          <label htmlFor="passiveIncome" className={styles.label()}>
             How much passive income do you have annually?
           </label>
           <NumberInput
@@ -156,12 +158,8 @@ const WorkStep: React.FC<WorkStepProps> = ({
 
       {/* Q3: Job type (only if remoteWork is "Yes") */}
       {remoteWork === "Yes" && (
-        <div className="flex flex-col gap-[0.5rem]">
-          <label
-            htmlFor="jobType"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
+        <div className={styles.questionWrapper()} style={{ animationDelay: "200ms" }}>
+          <label htmlFor="jobType" className={styles.label()}>
             What type of job do you have?
           </label>
           <input
@@ -169,62 +167,67 @@ const WorkStep: React.FC<WorkStepProps> = ({
             type="text"
             value={jobType}
             onChange={(e) => setJobType(e.target.value)}
-            placeholder="Enter job type"
-            className="px-[1rem] py-[0.75rem] bg-[#E5DEDB] rounded-[0.5rem] text-[#1F2A44] text-[1rem] font-medium placeholder-[#6B7280] outline-none focus:border-[#03BCA3] focus:ring-[0.0625rem] focus:ring-[#03BCA3]"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            placeholder="e.g., Software Developer, Designer, Writer"
+            className={styles.input()}
           />
         </div>
       )}
 
       {/* Q4: Monthly income (only if remoteWork is "Yes") */}
       {remoteWork === "Yes" && (
-        <div className="flex flex-col gap-[0.5rem]">
-          <label
-            htmlFor="monthlyIncome"
-            className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            How much do you make a month?
+        <div className={styles.questionWrapper()} style={{ animationDelay: "300ms" }}>
+          <label htmlFor="monthlyIncome" className={styles.label()}>
+            How much do you make a month? <span className={styles.required()}>*</span>
           </label>
           <NumberInput
             id="monthlyIncome"
             value={monthlyIncome}
-            onChange={setMonthlyIncome}
+            onChange={(value) => {
+              setMonthlyIncome(value);
+              setErrors({ ...errors, monthlyIncome: undefined });
+            }}
             placeholder="Enter amount"
             icon={null}
             min={0}
           />
+          {errors.monthlyIncome && (
+            <p className={styles.errorText()}>
+              {errors.monthlyIncome}
+            </p>
+          )}
         </div>
       )}
 
       {/* Q5: Interested in business visa? */}
-      <div className="flex flex-col gap-[0.5rem]">
-        <label
-          className="text-[#1F2A44] font-medium text-[0.875rem] leading-[1.25rem] md:text-[1rem] md:leading-[1.5rem]"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
+      <div className={styles.questionWrapper()} style={{ animationDelay: "400ms" }}>
+        <label className={styles.label()}>
           Are you interested in pursuing a business visa?
         </label>
-        <div className="flex gap-[1rem]">
-          <label className="flex items-center gap-[0.5rem]">
+        <div className={styles.checkboxGroup()}>
+          <label className={styles.checkboxLabel()}>
             <input
               type="checkbox"
               checked={interestedInBusinessVisa}
               onChange={(e) => setInterestedInBusinessVisa(e.target.checked)}
-              className="w-[1rem] h-[1rem] text-[#03BCA3]"
+              className={styles.checkbox()}
             />
-            <span
-              className="text-[0.875rem] text-[#1F2A44]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              Yes
-            </span>
+            <span className={styles.checkboxText()}>Yes, I'm interested</span>
           </label>
         </div>
+        {interestedInBusinessVisa && (
+          <div className={styles.infoCard()}>
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className={styles.infoText()}>
+                Business visas typically require a detailed business plan and proof of investment capital.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <NavigationButtons
-        onPrevious={onPrevious}
+        onPrevious={handlePrevious}
         onNext={handleSubmit}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}

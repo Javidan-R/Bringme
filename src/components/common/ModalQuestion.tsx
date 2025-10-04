@@ -1,5 +1,5 @@
 import { ModalQuestionProps } from "@/types/components";
-import { modal } from "../../lib/styles/modal";
+import { modal } from "../../lib/styles";
 import Button from "./Button";
 
 

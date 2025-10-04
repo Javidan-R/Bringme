@@ -1,5 +1,12 @@
-import { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
+export interface StepIndicatorProps {
+  steps: string[];
+  currentStep: number;
+}
+ export interface LoginContainerProps {
+  children: ReactNode;
+}
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'outline'; 
   showArrow?: boolean; 
@@ -43,7 +50,7 @@ export  interface StepIndicatorProps {
 }
 
 
-export interface StepItemProps {
+export interface StepperProps {
   stepNumber: number;
   label: string;
   isActive: boolean;
@@ -96,4 +103,17 @@ export interface ToggleButtonsProps {
   value: boolean;
   onChange: (value: boolean) => void;
   labels?: [string, string];
+}
+
+export interface FinalizeProfileModalProps {
+  onEdit: () => void;
+  onFinalize: () => void;
+}
+export interface LeftSidebarProps {
+  steps?: string[];
+  currentStep?: number;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (isOpen: boolean) => void;
+  onStepClick?: (stepNumber: number) => void;
+  onLogout: () => void;
 }

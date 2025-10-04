@@ -1,5 +1,5 @@
 import { NumberInputProps } from "@/types/components";
-import { numberInputWrapper, numberInputField } from "../../lib/styles/ui";
+import { numberInputWrapper, numberInputField } from "../../lib/styles";
 
 
 

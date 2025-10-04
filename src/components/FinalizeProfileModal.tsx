@@ -1,11 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import { finalizeProfileModalVariants } from "../lib/styles/finalizeprofile";
+import { FinalizeProfileModalProps } from "@/types/components";
 
-interface FinalizeProfileModalProps {
-  onEdit: () => void;
-  onFinalize: () => void;
-}
 
 const FinalizeProfileModal: React.FC<FinalizeProfileModalProps> = ({ 
   onEdit, 

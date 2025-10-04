@@ -11,19 +11,13 @@ import {
   LogOut,
   X,
   Menu,
-  Info,
-  DollarSign,
 } from "lucide-react";
 import { dashboardVariants } from "../../lib/styles/dashboard";
 import { useAppDispatch } from "../../hooks";
 import { clearUser } from "../../features/authSlice";
 import { resetFormData } from "../../features/onboardingSlice";
+import { Country } from "@/types/pages";
 
-interface Country {
-  id: string;
-  name: string;
-  flag: string;
-}
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();

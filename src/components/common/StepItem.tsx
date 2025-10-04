@@ -1,25 +1,20 @@
 import { Check } from "lucide-react";
-import { stepItemVariants } from "../../lib/styles/ui";
-import { StepItemProps } from "../../types/components";
-
-
-
-
-
-const StepItem: React.FC<StepItemProps> = ({
+import { StepperProps } from "../../types/components";
+import { StepperVariants } from "../../lib/styles";
+const Stepper: React.FC<StepperProps> = ({
   stepNumber,
   label,
   isActive,
   isCompleted,
   onClick,
 }) => {
-  console.log(`StepItem ${stepNumber}: isActive=${isActive}, isCompleted=${isCompleted}`);
+  console.log(`Stepper ${stepNumber}: isActive=${isActive}, isCompleted=${isCompleted}`);
 
   const isNumberVisible = !isCompleted;
   const isCheckVisible = isCompleted;
 
   const state = isCompleted ? "completed" : isActive ? "active" : "inactive";
-  const styles = stepItemVariants({ state });
+  const styles = StepperVariants({ state });
 
   return (
     <button
@@ -46,4 +41,4 @@ const StepItem: React.FC<StepItemProps> = ({
   );
 };
 
-export default StepItem;
+export default Stepper;

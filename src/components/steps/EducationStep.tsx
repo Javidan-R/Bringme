@@ -1,87 +1,11 @@
 import { useState, useCallback } from "react";
-import { tv } from "tailwind-variants";
+import { useSelector, useDispatch } from 'react-redux';
 import NavigationButtons from "../common/NavigationButtons";
 import MultiSelect from "../common/MultiSelect";
-
-const educationStepVariants = tv({
-  slots: {
-    container: [
-      "flex",
-      "flex-col",
-      "gap-[1.5rem]",
-    ],
-    questionWrapper: [
-      "flex",
-      "flex-col",
-      "gap-[0.5rem]",
-    ],
-    label: [
-      "text-[#1F2A44]",
-      "font-medium",
-      "text-[0.875rem]",
-      "leading-[1.25rem]",
-      "md:text-[1rem]",
-      "md:leading-[1.5rem]",
-      "font-inter",
-    ],
-    input: [
-      "px-[1rem]",
-      "py-[0.75rem]",
-      "bg-[#E5DEDB]",
-      "rounded-[0.5rem]",
-      "text-[#1F2A44]",
-      "text-[1rem]",
-      "font-medium",
-      "placeholder-[#6B7280]",
-      "outline-none",
-      "focus:border-[#03BCA3]",
-      "focus:ring-[0.0625rem]",
-      "focus:ring-[#03BCA3]",
-      "font-inter",
-    ],
-    checkboxGroup: [
-      "flex",
-      "gap-[1rem]",
-    ],
-    checkboxLabel: [
-      "flex",
-      "items-center",
-      "gap-[0.5rem]",
-    ],
-    checkbox: [
-      "w-[1rem]",
-      "h-[1rem]",
-      "text-[#03BCA3]",
-    ],
-    checkboxText: [
-      "text-[0.875rem]",
-      "text-[#1F2A44]",
-      "font-inter",
-    ],
-    errorText: [
-      "text-[0.75rem]",
-      "text-red-500",
-      "mt-[0.25rem]",
-      "font-inter",
-    ],
-  },
-});
-
-interface EducationStepData {
-  highestLevel: string;
-  field: string;
-  interestedInEducationVisa: boolean;
-  educationFields: string;
-}
-
-interface EducationStepProps {
-  data: EducationStepData;
-  onSubmit: (data: EducationStepData) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
+import { educationStepVariants } from "../../lib/styles";
+import { RootState, AppDispatch } from '../../store';
+import { nextStep, previousStep, updateEducationStep } from "../../features/stepSlice";
+import { StepRTKProps } from "@/types/steps";
 
 const educationLevels = [
   "High School",
@@ -91,20 +15,19 @@ const educationLevels = [
   "PhD",
 ];
 
-const EducationStep: React.FC<EducationStepProps> = ({
-  data,
-  onSubmit,
-  onPrevious,
-  onNext,
+const EducationStep: React.FC<StepRTKProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const [highestLevel, setHighestLevel] = useState<string>(data.highestLevel);
-  const [field, setField] = useState<string>(data.field);
+  const dispatch = useDispatch<AppDispatch>();
+  const initialData = useSelector((state: RootState) => state.stepForm);
+
+  const [highestLevel, setHighestLevel] = useState<string>(initialData.highestLevel);
+  const [field, setField] = useState<string>(initialData.field);
   const [interestedInEducationVisa, setInterestedInEducationVisa] = useState<boolean>(
-    data.interestedInEducationVisa
+    initialData.interestedInEducationVisa
   );
-  const [educationFields, setEducationFields] = useState<string>(data.educationFields);
+  const [educationFields, setEducationFields] = useState<string>(initialData.educationFields);
   const [errors, setErrors] = useState<{ highestLevel?: string }>({});
 
   const styles = educationStepVariants();
@@ -125,14 +48,23 @@ const EducationStep: React.FC<EducationStepProps> = ({
     }
 
     setErrors({});
-    onSubmit({
+    
+    // 1. Save data to Redux
+    dispatch(updateEducationStep({
       highestLevel,
       field,
       interestedInEducationVisa,
-      educationFields,
-    });
-    onNext();
-  }, [highestLevel, field, interestedInEducationVisa, educationFields, onSubmit, onNext, validateForm]);
+      educationFields: interestedInEducationVisa ? educationFields : "",
+    }));
+    
+    // 2. Navigate
+    dispatch(nextStep());
+  }, [highestLevel, field, interestedInEducationVisa, educationFields, validateForm, dispatch]);
+
+  const handlePrevious = useCallback(() => {
+    dispatch(previousStep());
+  }, [dispatch]);
+
 
   return (
     <div className={styles.container()}>
@@ -218,7 +150,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
       )}
 
       <NavigationButtons
-        onPrevious={onPrevious}
+        onPrevious={handlePrevious}
         onNext={handleSubmit}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}

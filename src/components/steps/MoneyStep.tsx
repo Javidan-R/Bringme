@@ -1,40 +1,40 @@
 import { useState, useCallback } from "react";
+import { useSelector, useDispatch } from 'react-redux';
 import NavigationButtons from "../common/NavigationButtons";
 import NumberInput from "../common/NumberInput";
 import { form } from "../../lib/styles/ui";
+import { RootState, AppDispatch } from '../../store';
+import { updateMoneyStep, nextStep, previousStep } from "../../features/stepSlice";
+import { StepRTKProps } from "../../types/steps";
+
 const { wrapper, label, checkboxWrapper, checkbox } = form();
 
-interface MoneyStepData {
-  interestedInInvestmentVisa: boolean;
-  savings: number | null;
-}
-
-interface MoneyStepProps {
-  data: MoneyStepData;
-  onSubmit: (data: MoneyStepData) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
-
-const MoneyStep: React.FC<MoneyStepProps> = ({
-  data,
-  onSubmit,
-  onPrevious,
-  onNext,
+const MoneyStep: React.FC<StepRTKProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const initialData = useSelector((state: RootState) => state.stepForm);
+
   const [interestedInInvestmentVisa, setInterestedInInvestmentVisa] = useState(
-    data.interestedInInvestmentVisa
+    initialData.interestedInInvestmentVisa
   );
-  const [savings, setSavings] = useState<number | null>(data.savings);
+  const [savings, setSavings] = useState<number | null>(initialData.savings);
 
   const handleSubmit = useCallback(() => {
-    onSubmit({ interestedInInvestmentVisa, savings });
-    onNext();
-  }, [interestedInInvestmentVisa, savings, onSubmit, onNext]);
+    // 1. Save data to Redux
+    dispatch(updateMoneyStep({ 
+        interestedInInvestmentVisa, 
+        savings: interestedInInvestmentVisa ? savings : null,
+    }));
+    
+    // 2. Navigate
+    dispatch(nextStep());
+  }, [interestedInInvestmentVisa, savings, dispatch]);
+
+  const handlePrevious = useCallback(() => {
+    dispatch(previousStep());
+  }, [dispatch]);
 
   return (
     <div className={wrapper()}>
@@ -69,7 +69,7 @@ const MoneyStep: React.FC<MoneyStepProps> = ({
       )}
 
       <NavigationButtons
-        onPrevious={onPrevious}
+        onPrevious={handlePrevious}
         onNext={handleSubmit}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { input } from "../../lib/styles/ui";
+import { input } from "../../lib/styles";
 import { InputProps } from "../../types/components";
 
 const Input: React.FC<InputProps> = ({ label, className, error, ...props }) => {

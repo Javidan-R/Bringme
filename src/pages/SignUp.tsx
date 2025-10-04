@@ -10,17 +10,8 @@ import GoogleIcon from "../assets/icons/google.svg";
 import { useAppDispatch } from "../hooks";
 import { setUser } from "../features/authSlice";
 import { signupVariants } from "../lib/styles/signup";
+import { ClerkAPIError, ClerkErrorDetail } from "../types/pages";
 
-interface ClerkErrorDetail {
-  message: string;
-  longMessage?: string;
-  code?: string;
-}
-
-interface ClerkAPIError {
-  errors?: ClerkErrorDetail[];
-  message?: string;
-}
 
 function isClerkAPIError(error: unknown): error is ClerkAPIError {
   if (typeof error !== "object" || error === null) return false;

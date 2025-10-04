@@ -1,13 +1,11 @@
-import { ReactNode } from "react";
 import rightImg from "../../assets/images/right_img.png";
 import BringMeAbroad_Logo from '../../assets/images/BringMeAbroad_Logo.png';
 import { layout } from "../../lib/styles/ui";
+import { LoginContainerProps } from "../../types/components";
 
 const { loginContainer, left, rightImageWrapper, rightOverlay, logoWrapper, logoImage } = layout();
 
-interface LoginContainerProps {
-  children: ReactNode;
-}
+
 
 const LoginContainer: React.FC<LoginContainerProps> = ({ children }) => {
   return (

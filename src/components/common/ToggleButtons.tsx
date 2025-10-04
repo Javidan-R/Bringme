@@ -1,8 +1,6 @@
 import { Check, X } from "lucide-react";
-import { toggleButton } from "../../lib/styles/ui";
+import { toggleButton } from "../../lib/styles";
 import { ToggleButtonsProps } from "@/types/components";
-
-
 const ToggleButtons: React.FC<ToggleButtonsProps> = ({
   value,
   onChange,

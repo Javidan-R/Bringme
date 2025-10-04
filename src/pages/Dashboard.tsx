@@ -1,126 +1,51 @@
-// src/pages/Dashboard.tsx
-import { useState } from "react";
-
+import { useState, useMemo, useCallback } from "react";
 import {
   Star,
   Briefcase,
   Home,
   ChevronDown,
   ChevronUp,
-
 } from "lucide-react";
 import { dashboardVariants } from "../lib/styles/dashboard";
 import CountryInfo from "./CountryInfo";
 import CityCosts from "./CityCosts";
-
-interface Country {
-  id: string;
-  name: string;
-  flag: string;
-}
-
-interface VisaCard {
-  id: string;
-  countryId: string;
-  country: string;
-  flag: string;
-  visaName: string;
-  visaType: "digital" | "investment" | "freelance";
-  duration: string;
-  requirements: string[];
-  workRights: boolean;
-  permanentResidency: boolean;
-}
-
+import { Country } from "../types/pages";
+import { allVisas, initialCountries } from "../lib/data/dashboard";
 type TabType = "visas" | "country" | "costs";
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("visas");
-  const [selectedCountries, setSelectedCountries] = useState<Country[]>([
-    { id: "1", name: "Germany", flag: "🇩🇪" },
-    { id: "2", name: "Portugal", flag: "🇵🇹" },
-  ]);
+  const [selectedCountries] = useState<Country[]>(initialCountries);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [tabTransition, setTabTransition] = useState(false);
 
   const styles = dashboardVariants();
 
-  const allVisas: VisaCard[] = [
-    {
-      id: "1",
-      countryId: "1",
-      country: "Germany",
-      flag: "🇩🇪",
-      visaName: "Freelance Visa",
-      visaType: "digital",
-      duration: "2 year",
-      requirements: [
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-      ],
-      workRights: true,
-      permanentResidency: true,
-    },
-    {
-      id: "2",
-      countryId: "2",
-      country: "Portugal",
-      flag: "🇵🇹",
-      visaName: "D12 Visa",
-      visaType: "investment",
-      duration: "2 year",
-      requirements: [
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-      ],
-      workRights: true,
-      permanentResidency: true,
-    },
-    {
-      id: "3",
-      countryId: "2",
-      country: "Portugal",
-      flag: "🇵🇹",
-      visaName: "D12 Visa",
-      visaType: "investment",
-      duration: "2 year",
-      requirements: [
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-        "Remote workers employed by non-Portuguese companies.",
-      ],
-      workRights: true,
-      permanentResidency: true,
-    },
-  ];
-
-  const filteredVisas = allVisas.filter((visa) =>
-    selectedCountries.some((country) => country.id === visa.countryId)
+  const filteredVisas = useMemo(
+    () =>
+      allVisas.filter((visa) =>
+        selectedCountries.some((country) => country.id === visa.countryId)
+      ),
+    [selectedCountries]
   );
 
-  const toggleCard = (cardId: string) => {
-    const newExpanded = new Set(expandedCards);
-    if (newExpanded.has(cardId)) {
-      newExpanded.delete(cardId);
-    } else {
-      newExpanded.add(cardId);
-    }
-    setExpandedCards(newExpanded);
-  };
+  const toggleCard = useCallback((cardId: string) => {
+    setExpandedCards((prev) => {
+      const newExpanded = new Set(prev);
+      newExpanded.has(cardId) ? newExpanded.delete(cardId) : newExpanded.add(cardId);
+      return newExpanded;
+    });
+  }, []);
 
-
-
-  const handleTabChange = (tab: TabType) => {
+  const handleTabChange = useCallback((tab: TabType) => {
     setTabTransition(true);
     setTimeout(() => {
       setActiveTab(tab);
       setTabTransition(false);
     }, 150);
-  };
+  }, []);
 
-  const renderVisasTab = () => {
+  const renderVisasTab = useCallback(() => {
     if (filteredVisas.length === 0) {
       return (
         <div className={styles.emptyState()}>
@@ -147,7 +72,6 @@ const Dashboard: React.FC = () => {
                     </h3>
                   </div>
                 </div>
-
                 <div className={styles.badges()}>
                   <span className={styles.durationBadge()}>{visa.duration}</span>
                   <span
@@ -161,7 +85,6 @@ const Dashboard: React.FC = () => {
                   </span>
                 </div>
               </div>
-
               <button
                 onClick={() => toggleCard(visa.id)}
                 className={styles.expandButton()}
@@ -178,7 +101,6 @@ const Dashboard: React.FC = () => {
                   </>
                 )}
               </button>
-
               <div
                 className={dashboardVariants({
                   expanded: isExpanded,
@@ -194,7 +116,6 @@ const Dashboard: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-
                   <div className={styles.benefits()}>
                     {visa.workRights && (
                       <div className={styles.benefit()}>
@@ -216,9 +137,9 @@ const Dashboard: React.FC = () => {
         })}
       </div>
     );
-  };
+  }, [filteredVisas, expandedCards, styles, toggleCard]);
 
-  const renderTabContent = () => {
+  const renderTabContent = useMemo(() => {
     const contentClass = `transition-all duration-300 ${
       tabTransition
         ? "opacity-0 transform translate-y-4"
@@ -232,19 +153,16 @@ const Dashboard: React.FC = () => {
         {activeTab === "costs" && <CityCosts />}
       </div>
     );
-  };
+  }, [activeTab, tabTransition, renderVisasTab]);
 
   return (
     <div className={styles.layout()}>
-     
-
       <main className={styles.mainContent()}>
         <div className={styles.header()}>
           <h1 className={styles.pageTitle()}>
             <Star className="w-8 h-8 text-[#FFD700]" />
             Overview
           </h1>
-
           <div className={styles.tabs()}>
             <button
               onClick={() => handleTabChange("visas")}
@@ -272,8 +190,7 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {renderTabContent()}
+        {renderTabContent}
       </main>
     </div>
   );

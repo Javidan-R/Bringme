@@ -2,10 +2,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/authSlice";
 import onboardingReducer from "./features/onboardingSlice";
+import stepReducer from './features/stepSlice';
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     onboarding: onboardingReducer,
+    stepForm: stepReducer,
+
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

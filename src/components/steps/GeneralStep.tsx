@@ -1,224 +1,42 @@
 import { useState, useCallback } from "react";
-import { tv } from "tailwind-variants";
+import { useSelector, useDispatch } from 'react-redux';
 import NavigationButtons from "../common/NavigationButtons";
-import MultiSelect from "../common/MultiSelect";
-import NumberInput from "../common/NumberInput";
-
-// Design System: General Step Variants
-const generalStepVariants = tv({
-  slots: {
-    outerContainer: [
-      "w-full",
-      "max-w-[1200px]",
-      "mx-auto",
-      "min-h-[100svh]",
-      "px-[1rem]",
-      "sm:px-[3rem]",
-    ],
-    contentWrapper: [
-      "p-[1rem]",
-      "md:p-[2.5rem]",
-      "overflow-y-auto",
-    ],
-    formGrid: [
-      "grid",
-      "grid-cols-1",
-      "md:grid-cols-[1fr_2fr]",
-      "gap-y-[1.5rem]",
-      "md:gap-x-[2rem]",
-      "md:gap-y-[2rem]",
-    ],
-    labelColumn: [
-      "flex",
-      "flex-col",
-      "gap-[0.5rem]",
-    ],
-    inputColumn: [
-      "flex",
-      "flex-col",
-      "gap-[0.5rem]",
-    ],
-    label: [
-      "text-[#1F2A44]",
-      "font-medium",
-      "text-[0.875rem]",
-      "leading-[1.25rem]",
-      "md:text-[1rem]",
-      "md:leading-[1.5rem]",
-      "font-inter",
-    ],
-    required: [
-      "text-[#EF4444]",
-    ],
-    inputBase: [
-      "w-full",
-      "min-h-[3rem]",
-      "px-[0.75rem]",
-      "py-[0.5rem]",
-      "text-[0.875rem]",
-      "text-[#1F2A44]",
-      "bg-[#F0EDEB]",
-      "border-[0.0625rem]",
-      "border-[#D1D5DB]",
-      "rounded-[0.5rem]",
-      "focus:outline-none",
-      "focus:ring-[0.125rem]",
-      "focus:ring-[#22C55E]",
-      "focus:border-[#22C55E]",
-      "transition-all",
-      "duration-200",
-      "placeholder:text-[#9CA3AF]",
-      "md:text-[1rem]",
-      "font-inter",
-    ],
-    numberInput: [
-      "w-full",
-      "h-[3rem]",
-      "px-[0.75rem]",
-      "py-[0.5rem]",
-      "text-[0.875rem]",
-      "text-[#1F2A44]",
-      "bg-[#F0EDEB]",
-      "border-[0.0625rem]",
-      "border-[#D1D5DB]",
-      "rounded-[0.5rem]",
-      "focus:outline-none",
-      "focus:ring-[0.125rem]",
-      "focus:ring-[#22C55E]",
-      "focus:border-[#22C55E]",
-      "transition-all",
-      "duration-200",
-      "placeholder:text-[#9CA3AF]",
-      "md:text-[1rem]",
-      "font-inter",
-    ],
-    homeSizeRow: [
-      "flex",
-      "flex-col",
-      "gap-[0.5rem]",
-      "sm:flex-row",
-      "sm:gap-[1rem]",
-    ],
-    regionsButtonsWrapper: [
-      "flex",
-      "flex-wrap",
-      "gap-[0.5rem]",
-    ],
-    regionButton: [
-      "min-w-[8rem]",
-      "h-[2.5rem]",
-      "px-[1rem]",
-      "py-[0.5rem]",
-      "border-[0.0625rem]",
-      "rounded-[0.5rem]",
-      "text-[0.875rem]",
-      "font-medium",
-      "transition-colors",
-      "duration-200",
-      "focus:outline-none",
-      "focus:ring-[0.125rem]",
-      "focus:ring-[#22C55E]",
-      "focus:ring-offset-[0.0625rem]",
-      "md:text-[1rem]",
-      "font-inter",
-    ],
-    errorText: [
-      "text-[0.75rem]",
-      "text-[#EF4444]",
-      "mt-[0.25rem]",
-      "font-inter",
-    ],
-    navigationWrapper: [
-      "md:col-span-2",
-    ],
-  },
-  variants: {
-    regionSelected: {
-      true: {
-        regionButton: [
-          "bg-[#22C55E]",
-          "text-white",
-          "border-[#22C55E]",
-          "hover:bg-[#20b356]",
-        ],
-      },
-      false: {
-        regionButton: [
-          "bg-white",
-          "text-[#1F2A44]",
-          "border-[#D1D5DB]",
-          "hover:bg-[#F3F4F6]",
-        ],
-      },
-    },
-  },
-});
-
-interface GeneralStepData {
-  nationality: string[];
-  age: number | null;
-  homeSize: number | null;
-  bedrooms: number | null;
-  regions: string[];
-}
-
-interface GeneralStepProps {
-  data: GeneralStepData;
-  onSubmit: (data: GeneralStepData) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-}
-
+import { generalStepVariants } from "../../lib/styles";
+import { RootState, AppDispatch } from '../../store';
+import { updateGeneralStep, nextStep, previousStep } from "../../features/stepSlice";
+import { MultiSelect, NumberInput } from "../common";
+import { StepRTKProps } from "../../types/steps";
 const regionsOptions = ["North America", "South America", "Asia", "Europe", "Africa", "Oceania"];
 const nationalitiesOptions = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Australia",
-  "Germany",
-  "France",
-  "India",
-  "China",
-  "Brazil",
-  "South Africa",
+  "United States", "Canada", "United Kingdom", "Australia", "Germany", 
+  "France", "India", "China", "Brazil", "South Africa",
 ];
 
-const GeneralStep: React.FC<GeneralStepProps> = ({
-  data,
-  onSubmit,
-  onPrevious,
-  onNext,
+
+const GeneralStep: React.FC<StepRTKProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const [nationality, setNationality] = useState<string[]>(data.nationality || []);
-  const [age, setAge] = useState<number | null>(data.age || null);
-  const [homeSize, setHomeSize] = useState<number | null>(data.homeSize || null);
-  const [bedrooms, setBedrooms] = useState<number | null>(data.bedrooms || null);
-  const [selectedRegions, setSelectedRegions] = useState<string[]>(data.regions || []);
+  const dispatch = useDispatch<AppDispatch>();
+  const initialData = useSelector((state: RootState) => state.stepForm);
+  
+  const [nationality, setNationality] = useState<string[]>(initialData.nationality || []);
+  const [age, setAge] = useState<number | null>(initialData.age || null);
+  const [homeSize, setHomeSize] = useState<number | null>(initialData.homeSize || null);
+  const [bedrooms, setBedrooms] = useState<number | null>(initialData.bedrooms || null);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>(initialData.regions || []);
   const [errors, setErrors] = useState<{
-    nationality?: string;
-    age?: string;
-    regions?: string;
+    nationality?: string; age?: string; regions?: string;
   }>({});
 
   const styles = generalStepVariants();
 
   const validateForm = useCallback(() => {
     const newErrors: { nationality?: string; age?: string; regions?: string } = {};
-    if (nationality.length === 0) {
-      newErrors.nationality = "At least one nationality is required";
-    }
-    if (age === null) {
-      newErrors.age = "Age is required";
-    } else if (age < 0 || age > 120) {
-      newErrors.age = "Please enter a valid age (0-120)";
-    }
-    if (selectedRegions.length === 0) {
-      newErrors.regions = "At least one region is required";
-    }
+    if (nationality.length === 0) newErrors.nationality = "At least one nationality is required";
+    if (age === null) newErrors.age = "Age is required";
+    else if (age < 0 || age > 120) newErrors.age = "Please enter a valid age (0-120)";
+    if (selectedRegions.length === 0) newErrors.regions = "At least one region is required";
     return newErrors;
   }, [nationality, age, selectedRegions]);
 
@@ -230,15 +48,15 @@ const GeneralStep: React.FC<GeneralStepProps> = ({
     }
 
     setErrors({});
-    onSubmit({
-      nationality,
-      age,
-      homeSize,
-      bedrooms,
-      regions: selectedRegions,
-    });
-    onNext();
-  }, [nationality, age, homeSize, bedrooms, selectedRegions, onSubmit, onNext, validateForm]);
+    
+    // 1. Save data to Redux
+    dispatch(updateGeneralStep({
+      nationality, age, homeSize, bedrooms, regions: selectedRegions,
+    }));
+    
+    // 2. Navigate
+    dispatch(nextStep());
+  }, [nationality, age, homeSize, bedrooms, selectedRegions, validateForm, dispatch]);
 
   const toggleRegion = (region: string) => {
     if (selectedRegions.includes(region)) {
@@ -247,6 +65,10 @@ const GeneralStep: React.FC<GeneralStepProps> = ({
       setSelectedRegions([...selectedRegions, region]);
     }
   };
+  
+  const handlePrevious = useCallback(() => {
+    dispatch(previousStep());
+  }, [dispatch]);
 
   return (
     <div className={styles.outerContainer()}>
@@ -380,7 +202,7 @@ const GeneralStep: React.FC<GeneralStepProps> = ({
           {/* Navigation Buttons */}
           <div className={styles.navigationWrapper()}>
             <NavigationButtons
-              onPrevious={onPrevious}
+              onPrevious={handlePrevious}
               onNext={handleSubmit}
               isFirstStep={isFirstStep}
               isLastStep={isLastStep}

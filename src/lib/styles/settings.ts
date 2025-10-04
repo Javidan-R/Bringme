@@ -1,4 +1,3 @@
-// src/lib/styles/settings.ts
 import { tv } from "tailwind-variants";
 
 export const settingsVariants = tv({

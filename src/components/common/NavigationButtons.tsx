@@ -1,5 +1,5 @@
 import Button from "./Button";
-import { navigation } from "../../lib/styles/ui";
+import { navigation } from "../../lib/styles";
 import { NavigationButtonsProps } from "@/types/components";
 
 const { wrapper, button, previous, next, hidden } = navigation();
