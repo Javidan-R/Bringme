@@ -44,18 +44,6 @@ export interface CityData {
 }
 
 
-export interface ClerkErrorDetail {
-  message: string;
-  longMessage?: string;
-  code?: string;
-}
-
-export interface ClerkAPIError {
-  errors?: ClerkErrorDetail[];
-  message?: string;
-}
-
-
 
 export interface FormData {
   general: {

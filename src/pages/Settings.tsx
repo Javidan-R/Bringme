@@ -1,5 +1,5 @@
 // src/pages/Settings.tsx
-import { settingsVariants } from "../lib/styles/settings";
+import { settingsVariants } from "../modules/Onboarding/styles/settings";
 import { useState } from "react";
 
 const Settings: React.FC = () => {

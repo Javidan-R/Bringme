@@ -4,14 +4,14 @@ import { useSignIn, useUser } from "@clerk/clerk-react";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import Button from "../components/common/Button";
-import Input from "../components/common/Input";
-import LoginContainer from "../components/layout/LoginContainer";
+import Button from "../shared/components/common/Button";
+import Input from "../shared/components/common/Input";
+import LoginContainer from "../modules/Auth/components/LoginContainer";
 import GoogleIcon from "../assets/icons/google.svg";
 import { useAppDispatch } from "../hooks";
-import { setUser } from "../features/authSlice";
-import { loginVariants } from "../lib/styles/login";
-import { ClerkAPIError, ClerkErrorDetail } from "../types/pages";
+import { loginVariants } from "../modules/Auth/styles/login";
+import { ClerkAPIError, ClerkErrorDetail } from "../modules/Auth/types";
+import { setUser } from "../modules/Auth/slice";
 
 // Clerk API Xətasını Yoxlama Funksiyası (dəyişməz qalır)
 function isClerkAPIError(error: unknown): error is ClerkAPIError {

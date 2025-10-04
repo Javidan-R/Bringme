@@ -1,9 +1,22 @@
+
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Route, Routes, Navigate } from "react-router-dom";
-import ProtectedRoute from "../components/ProtectedRoute";
-import PublicRoute from "../components/PublicRoute";
-import { Blog, Dashboard, ForgotPassword, Home, Login, OnboardingPage, Settings, SignUp, Support } from "../pages";
-import DashboardLayout from "../components/layout/DashboardLayout";
+import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
+import { 
+  Blog, 
+  Dashboard, 
+  ForgotPassword, 
+  Home, 
+  Login, 
+  OnboardingPage, 
+  Settings, 
+  SignUp, 
+  Support 
+} from "../pages";
+import DashboardLayout from "../shared/components/layout/DashboardLayout";
+import { PackageSelectionPage } from "../modules/Onboarding/components";
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -54,6 +67,16 @@ export const AppRoutes = () => {
         }
       />
 
+      {/* Package Selection */}
+      <Route
+        path="/packages"
+        element={
+          <ProtectedRoute>
+            <PackageSelectionPage />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Onboarding */}
       <Route
         path="/onboarding"
@@ -85,7 +108,7 @@ export const AppRoutes = () => {
         element={
           <>
             <SignedIn>
-              <Navigate to="/dashboard" replace />
+              <Navigate to="/onboarding" replace />
             </SignedIn>
             <SignedOut>
               <Navigate to="/login" replace />

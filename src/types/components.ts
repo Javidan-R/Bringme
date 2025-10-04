@@ -56,6 +56,7 @@ export interface StepperProps {
   isActive: boolean;
   isCompleted: boolean;
   onClick: () => void;
+  completedSteps?: number[];  
 }
 
 export interface ModalQuestionProps {
@@ -116,4 +117,5 @@ export interface LeftSidebarProps {
   setIsMenuOpen: (isOpen: boolean) => void;
   onStepClick?: (stepNumber: number) => void;
   onLogout: () => void;
+  completedSteps?: number[];
 }

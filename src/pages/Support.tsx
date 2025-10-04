@@ -1,6 +1,6 @@
 // src/pages/Support.tsx
 import { useState } from "react";
-import { supportVariants } from "../lib/styles/support";
+import { supportVariants } from "../modules/Onboarding/styles/support";
 
 const Support: React.FC = () => {
   const [formData, setFormData] = useState({

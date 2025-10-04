@@ -1,17 +1,17 @@
-export {  ancestryStepVariants, educationStepVariants, familyStepVariants, generalStepVariants, workStepVariants  } from "./steps";
+export {  ancestryStepVariants, educationStepVariants, familyStepVariants, generalStepVariants, workStepVariants  } from "../../modules/Checkout/styles/steps";
 export { form, layout, button, sidebar, card, checkbox, input, dropdown, multiSelect,  numberInputWrapper, numberInputField, toggleButton,navigation, StepperVariants, modal,   } from "./ui";
 
 export { leftSidebarVariants , stepIndicatorVariants } from "./layout";
 export { dashboardVariants } from "./dashboard";
-export {  blogVariants } from "./blog";
-export {  cityCostsVariants } from "./cityCosts";
-export {  finalizeProfileModalVariants } from "./finalizeprofile";
-export {  loginVariants } from "./login";
-export {  onboardingVariants } from "./onboarding";
-export {  settingsVariants } from "./settings";
-export {  packageSelectionVariants } from "./packagesection";
-export {  signupVariants } from "./signup";
-export {  countryInfoVariants } from "./countryInfo";
+export {  blogVariants } from "../../modules/Onboarding/styles/blog";
+export {  cityCostsVariants } from "../../modules/Onboarding/styles/cityCosts";
+export {  finalizeProfileModalVariants } from "../../modules/Checkout/styles/finalizeprofile";
+export {  loginVariants } from "../../modules/Auth/styles/login";
+export {  onboardingVariants } from "../../modules/Onboarding/styles/onboarding";
+export {  settingsVariants } from "../../modules/Onboarding/styles/settings";
+export {  packageSelectionVariants } from "../../modules/Checkout/styles/packagesection";
+export {  signupVariants } from "../../modules/Auth/styles/signup";
+export {  countryInfoVariants } from "../../modules/Onboarding/styles/countryInfo";
 
 
 
@@ -20,4 +20,4 @@ export {  countryInfoVariants } from "./countryInfo";
 
 
 
-export {  supportVariants } from "./support";
+export {  supportVariants } from "../../modules/Onboarding/styles/support";

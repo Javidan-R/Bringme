@@ -7,7 +7,7 @@ import {
   Zap,
   Dumbbell
 } from "lucide-react";
-import { cityCostsVariants } from "../lib/styles/cityCosts";
+import { cityCostsVariants } from "../modules/Onboarding/styles/cityCosts";
 import { cities } from "../lib/data/cities";
 import { CityData } from "../types/pages";
 

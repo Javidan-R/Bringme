@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import LoginContainer from "../components/layout/LoginContainer";
-import Input from "../components/common/Input";
-import Button from "../components/common/Button";
+import LoginContainer from "../modules/Auth/components/LoginContainer";
+import Input from "../shared/components/common/Input";
+import Button from "../shared/components/common/Button";
 import { ArrowRight } from "lucide-react";
 import { form } from "../lib/styles/ui";
 

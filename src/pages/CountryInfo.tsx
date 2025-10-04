@@ -6,7 +6,7 @@ import {
   Landmark,
   ChevronRight
 } from "lucide-react";
-import { countryInfoVariants } from "../lib/styles/countryInfo";
+import { countryInfoVariants } from "../modules/Onboarding/styles/countryInfo";
 import { countries } from "../lib/data/country";
 
 const CountryInfo: React.FC = () => {

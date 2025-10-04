@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import Button from "../components/common/Button";
+import Button from "../shared/components/common/Button";
 
 const Home: React.FC = () => {
   const { isSignedIn } = useUser();

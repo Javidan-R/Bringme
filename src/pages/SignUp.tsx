@@ -3,14 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 import { useSignUp, useUser } from "@clerk/clerk-react";
 import { ArrowRight } from "lucide-react";
 
-import Button from "../components/common/Button";
-import Input from "../components/common/Input";
-import LoginContainer from "../components/layout/LoginContainer";
+import Button from "../shared/components/common/Button";
+import Input from "../shared/components/common/Input";
+import LoginContainer from "../modules/Auth/components/LoginContainer";
 import GoogleIcon from "../assets/icons/google.svg";
 import { useAppDispatch } from "../hooks";
-import { setUser } from "../features/authSlice";
-import { signupVariants } from "../lib/styles/signup";
-import { ClerkAPIError, ClerkErrorDetail } from "../types/pages";
+import { signupVariants } from "../modules/Auth/styles/signup";
+import { ClerkAPIError, ClerkErrorDetail } from "../modules/Auth/types";
+import { setUser } from "../modules/Auth/slice";
 
 
 function isClerkAPIError(error: unknown): error is ClerkAPIError {

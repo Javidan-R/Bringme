@@ -1,8 +1,8 @@
 // src/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./features/authSlice";
-import onboardingReducer from "./features/onboardingSlice";
-import stepReducer from './features/stepSlice';
+import authReducer from "./modules/Auth/slice";
+import onboardingReducer from "./modules/Onboarding/slice";
+import stepReducer from './modules/Checkout/slice';
 
 export const store = configureStore({
   reducer: {

@@ -1,6 +1,6 @@
 // src/pages/Blog.tsx
 import { ArrowRight, Clock } from "lucide-react";
-import { blogVariants } from "../lib/styles/blog";
+import { blogVariants } from "../modules/Onboarding/styles/blog";
 import { posts } from "../lib/data/blog";
 
 const Blog: React.FC = () => {

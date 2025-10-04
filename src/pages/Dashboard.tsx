@@ -1,25 +1,56 @@
-import { useState, useMemo, useCallback } from "react";
+
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Star,
   Briefcase,
   Home,
   ChevronDown,
   ChevronUp,
+  CheckCircle,
+  Package,
 } from "lucide-react";
 import { dashboardVariants } from "../lib/styles/dashboard";
 import CountryInfo from "./CountryInfo";
 import CityCosts from "./CityCosts";
 import { Country } from "../types/pages";
 import { allVisas, initialCountries } from "../lib/data/dashboard";
+
 type TabType = "visas" | "country" | "costs";
 
+interface SelectedPackage {
+  title: string;
+  price: string;
+  features: string[];
+  badge: string;
+  featured?: boolean;
+  selectedAt: string;
+}
+
 const Dashboard: React.FC = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>("visas");
   const [selectedCountries] = useState<Country[]>(initialCountries);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [tabTransition, setTabTransition] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<SelectedPackage | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const styles = dashboardVariants();
+
+  // Load package info on mount
+  useEffect(() => {
+    const storedPackage = localStorage.getItem('selectedPackage');
+    if (storedPackage) {
+      setSelectedPackage(JSON.parse(storedPackage));
+    }
+
+    // Show welcome message if just purchased
+    if (location.state?.packagePurchased) {
+      setShowWelcome(true);
+      setTimeout(() => setShowWelcome(false), 5000);
+    }
+  }, [location]);
 
   const filteredVisas = useMemo(
     () =>
@@ -158,6 +189,43 @@ const Dashboard: React.FC = () => {
   return (
     <div className={styles.layout()}>
       <main className={styles.mainContent()}>
+        {/* Welcome Banner */}
+        {showWelcome && selectedPackage && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-green-900">
+                Welcome! Your {selectedPackage.title} is ready
+              </h3>
+              <p className="text-sm text-green-700 mt-1">
+                You now have full access to all features. Start exploring your personalized visa reports!
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Package Info Card */}
+        {selectedPackage && (
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Package className="w-5 h-5 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    {selectedPackage.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Active since {new Date(selectedPackage.selectedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <span className="text-lg font-bold text-blue-600">
+                {selectedPackage.price}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className={styles.header()}>
           <h1 className={styles.pageTitle()}>
             <Star className="w-8 h-8 text-[#FFD700]" />
