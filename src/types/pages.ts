@@ -9,19 +9,7 @@ export interface BlogPost {
   readTime: string;
   featured?: boolean;
 }
-export interface CityData {
-  name: string;
-  country: string;
-  flag: string;
-  costs: {
-    housing: { label: string; value: string }[];
-    food: { label: string; value: string }[];
-    transportation: { label: string; value: string }[];
-    utilities: { label: string; value: string }[];
-    lifestyle: { label: string; value: string }[];
-  };
-  totalMonthly: string;
-}
+
  export interface CountryData {
   name: string;
   flag: string;

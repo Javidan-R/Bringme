@@ -2,7 +2,7 @@ export {  ancestryStepVariants, educationStepVariants, familyStepVariants, gener
 export { form, layout, button, sidebar, card, checkbox, input, dropdown, multiSelect,  numberInputWrapper, numberInputField, toggleButton,navigation, StepperVariants, modal,   } from "./ui";
 
 export { leftSidebarVariants , stepIndicatorVariants } from "./layout";
-export { dashboardVariants } from "./dashboard";
+export { dashboardVariants } from "../../modules/Dashboard/styles/dashboard";
 export {  blogVariants } from "../../modules/Onboarding/styles/blog";
 export {  cityCostsVariants } from "../../modules/Onboarding/styles/cityCosts";
 export {  finalizeProfileModalVariants } from "../../modules/Checkout/styles/finalizeprofile";

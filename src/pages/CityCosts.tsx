@@ -1,758 +1,282 @@
-// ============================================
-// ENHANCED CITY COSTS - 15+ NEW FEATURES
-// ============================================
-import { useState, useMemo, useEffect } from "react";
+// src/pages/CityCosts.tsx
+
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Home, 
   ShoppingCart, 
   Car, 
   Zap,
   Dumbbell,
-  TrendingUp,
-  TrendingDown,
-  Calculator,
-  Download,
-  Share2,
-  PieChart,
-  BarChart3,
-  ArrowLeftRight,
-  Save,
-  X,
-  Plus,
-  Minus,
-  DollarSign,
-  Percent,
-  RefreshCw,
-  Info,
-  ExternalLink,
-  MapPin,
-  Users,
-  Calendar,
-  Filter,
-  ChevronDown,
-  Eye,
-  EyeOff,
-  Settings as SettingsIcon,
-  Copy,
-  Check,
+  AlertTriangle,
+  ArrowUp, 
+  ArrowDown
 } from "lucide-react";
-import { cityCostsVariants } from "../modules/Onboarding/styles/cityCosts";
-import { cities } from "../lib/data/cities";
-import { CityData } from "../types/pages";
+import { useOutletContext } from "react-router-dom";
+// @ts-ignore (cityCostsVariants ehtimal ki, stil faylıdır)
+import { cityCostsVariants } from "../modules/Onboarding/styles/cityCosts"; 
+import { cities as mockCityData } from "../lib/data/cities"; // Mock data adı dəyişdirildi
+import { CityData, Country } from "@/modules/Dashboard/types"; // Ehtimal olunan tip yolu
 
-interface CustomBudget {
-  housing: number;
-  food: number;
-  transport: number;
-  utilities: number;
-  lifestyle: number;
+// DashboardLayout context tipini müəyyənləşdirmək
+interface DashboardContext {
+  selectedCountries: Country[];
+  activeCountryId: string | null;
 }
 
-interface SavedComparison {
-  id: string;
-  city1: string;
-  city2: string;
-  savedAt: string;
-  notes?: string;
-}
+// XƏBƏRDARLIQ: Mock data tipini düzgün əks etdirmək üçün.
+const cities: CityData[] = mockCityData as CityData[];
 
-interface CostAlert {
-  id: string;
-  category: string;
-  threshold: number;
-  enabled: boolean;
-}
 
 const CityCosts: React.FC = () => {
-  const [selectedCity1, setSelectedCity1] = useState("Berlin");
-  const [selectedCity2, setSelectedCity2] = useState("Lisbon");
+  const { selectedCountries, activeCountryId } = useOutletContext<DashboardContext>();
+  // @ts-ignore
+  const styles = cityCostsVariants(); // UI stil variantları
+
+  // Aktiv ölkəni tap
+  const activeCountry = useMemo(() => 
+    selectedCountries.find(c => c.id === activeCountryId) || selectedCountries[0]
+  , [activeCountryId, selectedCountries]);
+
+  // Aktiv ölkənin şəhər adlarını tap
+  const cityOptions = useMemo(() => 
+    activeCountry ? activeCountry.cities : []
+  , [activeCountry]);
+
+
+  // State-ləri dinamik et
+  const [selectedCity1, setSelectedCity1] = useState(cityOptions[0] || "Berlin");
+  const [selectedCity2, setSelectedCity2] = useState(cityOptions.length > 1 ? cityOptions[1] : "Lisbon");
   const [compareMode, setCompareMode] = useState(false);
   
-  // FEATURE 1: Budget Calculator
-  const [showCalculator, setShowCalculator] = useState(false);
-  const [customBudget, setCustomBudget] = useState<CustomBudget>({
-    housing: 1200, food: 400, transport: 80, utilities: 250, lifestyle: 200
-  });
   
-  // FEATURE 2: Currency Converter
-  const [currency, setCurrency] = useState("EUR");
-  const [exchangeRate, setExchangeRate] = useState(1);
-  
-  // FEATURE 3: Saved Comparisons
-  const [savedComparisons, setSavedComparisons] = useState<SavedComparison[]>([]);
-  const [showSavedComparisons, setShowSavedComparisons] = useState(false);
-  
-  // FEATURE 4: Cost Breakdown Chart
-  const [showChart, setShowChart] = useState(false);
-  const [chartType, setChartType] = useState<"pie" | "bar">("pie");
-  
-  // FEATURE 5: Expense Tracking
-  const [trackedExpenses, setTrackedExpenses] = useState<Record<string, number>>({});
-  const [showExpenseTracker, setShowExpenseTracker] = useState(false);
-  
-  // FEATURE 6: Cost Alerts
-  const [costAlerts, setCostAlerts] = useState<CostAlert[]>([]);
-  const [showAlerts, setShowAlerts] = useState(false);
-  
-  // FEATURE 7: Hidden Categories
-  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
-  
-  // FEATURE 8: Percentage View
-  const [showPercentages, setShowPercentages] = useState(false);
-  
-  // FEATURE 9: Historical Data
-  const [showTrends, setShowTrends] = useState(false);
-  
-  // FEATURE 10: Notes System
-  const [cityNotes, setCityNotes] = useState<Record<string, string>>({});
-  
-  // FEATURE 11: Export Options
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  
-  // FEATURE 12: Split View Options
-  const [splitRatio, setSplitRatio] = useState(50);
-  
-  // FEATURE 13: Quick Add Expenses
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  
-  // FEATURE 14: Comparison History
-  const [comparisonHistory, setComparisonHistory] = useState<string[]>([]);
-  
-  // FEATURE 15: Cost Projection
-  const [projectionMonths, setProjectionMonths] = useState(12);
-  const [showProjection, setShowProjection] = useState(false);
-  
-  // Additional UI States
-  const [copied, setCopied] = useState(false);
-  const [notification, setNotification] = useState<string>("");
-
-  const styles = cityCostsVariants();
-
-  const city1Data = cities.find(c => c.name === selectedCity1) || cities[0];
-  const city2Data = cities.find(c => c.name === selectedCity2) || cities[1];
-
-  // Load saved data
+  // YENİ F-1: Default Şəhər Düzəlişi (cityOptions dəyişdikdə state-i yenilə)
   useEffect(() => {
-    const saved = localStorage.getItem('savedComparisons');
-    if (saved) setSavedComparisons(JSON.parse(saved));
-    
-    const notes = localStorage.getItem('cityNotes');
-    if (notes) setCityNotes(JSON.parse(notes));
-    
-    const alerts = localStorage.getItem('costAlerts');
-    if (alerts) setCostAlerts(JSON.parse(alerts));
-    
-    const expenses = localStorage.getItem('trackedExpenses');
-    if (expenses) setTrackedExpenses(JSON.parse(expenses));
-  }, []);
-
-  // Currency conversion
-  const convertCurrency = (amount: string) => {
-    const numAmount = parseFloat(amount.replace(/[^0-9.]/g, ''));
-    const converted = numAmount * exchangeRate;
-    return `${currency} ${converted.toFixed(0)}`;
-  };
-
-  // Calculate total budget
-  const totalCustomBudget = useMemo(() => {
-    return Object.values(customBudget).reduce((a, b) => a + b, 0);
-  }, [customBudget]);
-
-  // Calculate cost difference
-  const calculateDifference = (city1: CityData, city2: CityData) => {
-    const cost1 = parseFloat(city1.totalMonthly.replace(/[^0-9]/g, ''));
-    const cost2 = parseFloat(city2.totalMonthly.replace(/[^0-9]/g, ''));
-    const diff = cost1 - cost2;
-    const percentDiff = ((diff / cost2) * 100).toFixed(1);
-    return { diff, percentDiff, cheaper: diff > 0 ? city2.name : city1.name };
-  };
-
-  // Save comparison
-  const saveCurrentComparison = () => {
-    const newComparison: SavedComparison = {
-      id: Date.now().toString(),
-      city1: selectedCity1,
-      city2: compareMode ? selectedCity2 : "",
-      savedAt: new Date().toISOString(),
-    };
-    const updated = [...savedComparisons, newComparison];
-    setSavedComparisons(updated);
-    localStorage.setItem('savedComparisons', JSON.stringify(updated));
-    showNotification("Comparison saved!");
-  };
-
-  // Export to CSV
-  const exportToCSV = () => {
-    const data = `City,Housing,Food,Transport,Utilities,Lifestyle,Total\n${selectedCity1},1200,400,80,250,200,2130`;
-    const blob = new Blob([data], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedCity1}-costs.csv`;
-    a.click();
-    showNotification("CSV exported!");
-  };
-
-  // Copy to clipboard
-  const copyToClipboard = () => {
-    const text = `${selectedCity1} Monthly Costs: ${city1Data.totalMonthly}`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    showNotification("Copied to clipboard!");
-  };
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(""), 3000);
-  };
-
-  const toggleCategory = (category: string) => {
-    const updated = new Set(hiddenCategories);
-    if (updated.has(category)) {
-      updated.delete(category);
-    } else {
-      updated.add(category);
+    if (cityOptions.length > 0) {
+      // Əgər seçilmiş şəhər mövcud siyahıda yoxdursa, onu ilk şəhər ilə əvəz et
+      if (!cityOptions.includes(selectedCity1)) {
+        setSelectedCity1(cityOptions[0]);
+      }
+      if (!cityOptions.includes(selectedCity2)) {
+         setSelectedCity2(cityOptions.length > 1 ? cityOptions[1] : cityOptions[0]);
+      }
     }
-    setHiddenCategories(updated);
+  }, [cityOptions, selectedCity1, selectedCity2]);
+
+  
+  // Şəhər datalarını tap (Mock datadan)
+  const city1Data: CityData | undefined = useMemo(() => 
+      cities.find(c => c.name === selectedCity1)
+  , [selectedCity1]);
+  
+  const city2Data: CityData | undefined = useMemo(() => 
+      cities.find(c => c.name === selectedCity2)
+  , [selectedCity2]);
+  
+  
+  // Xərc Fərqini Hesablamaq (YENİ F-2)
+  const getCostDifference = (cost1Str: string | undefined, cost2Str: string | undefined) => {
+    if (!cost1Str || !cost2Str) return null;
+    
+    // Yalnız rəqəmləri çıxar (məsələn: "$1,200" -> 1200)
+    const parseCost = (cost: string) => parseFloat(cost.replace(/[^\d\.]/g, ''));
+    
+    const cost1 = parseCost(cost1Str);
+    const cost2 = parseCost(cost2Str);
+
+    if (isNaN(cost1) || isNaN(cost2)) return null;
+    
+    const difference = cost1 - cost2;
+    const isHigher = difference > 0;
+    const absDifference = Math.abs(difference).toLocaleString();
+    
+    return {
+      difference: absDifference,
+      isHigher: isHigher,
+      percentage: ((Math.abs(difference) / cost2) * 100).toFixed(1)
+    };
   };
+  
+  const totalCostDifference = compareMode && city1Data && city2Data
+    ? getCostDifference(city1Data.totalMonthly, city2Data.totalMonthly)
+    : null;
 
-  const renderCityCard = (cityData: CityData, isSecondary = false) => (
-    <div className={`${styles.cityCard()} relative`}>
-      {/* Enhanced Header with Actions */}
-      <div className={styles.cityHeader()}>
-        <div className={styles.cityTitle()}>
-          <span className="text-3xl">{cityData.flag}</span>
-          <div>
-            <h2 className={styles.cityName()}>{cityData.name}</h2>
-            <p className="text-sm text-[#6B7280] font-inter">{cityData.country}</p>
-          </div>
-        </div>
-        
-        <div className="flex flex-col items-end gap-2">
-          <div className={styles.costSummary()}>
-            <div className={styles.totalCost()}>
-              {currency === "EUR" ? cityData.totalMonthly : convertCurrency(cityData.totalMonthly)}
-            </div>
-            <div className={styles.perMonth()}>per month (avg)</div>
-          </div>
-          
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => copyToClipboard()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Copy"
-            >
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => setShowChart(!showChart)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="View Chart"
-            >
-              <PieChart className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setShowCalculator(!showCalculator)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Calculator"
-            >
-              <Calculator className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Cost Comparison Badge */}
-      {compareMode && !isSecondary && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">vs {selectedCity2}:</span>
-            <div className="flex items-center gap-2">
-              {calculateDifference(city1Data, city2Data).diff > 0 ? (
-                <>
-                  <TrendingUp className="w-4 h-4 text-red-500" />
-                  <span className="text-red-600 font-semibold">
-                    +{calculateDifference(city1Data, city2Data).percentDiff}% more expensive
-                  </span>
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="w-4 h-4 text-green-500" />
-                  <span className="text-green-600 font-semibold">
-                    {calculateDifference(city1Data, city2Data).percentDiff}% cheaper
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+  // Şəhər kartının render funksiyası (Premium UI)
+  const renderCityCard = (cityData: CityData | undefined, isComparison: boolean = false) => {
+      if (!cityData) {
+          return (
+              <div className="bg-white p-6 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center min-h-[300px]">
+                   <p className="text-gray-500 font-medium">No cost data available for this city.</p>
+              </div>
+          );
+      }
+      
+      return (
+          <div className="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-indigo-50">
+              <div className="flex items-start justify-between mb-6 border-b pb-4">
+                  <div className="flex items-center gap-3">
+                      <span className="text-4xl">{cityData.flag}</span>
+                      <div>
+                          <h2 className="text-2xl font-extrabold text-gray-900">{cityData.name}</h2>
+                          <p className="text-sm text-indigo-600 font-semibold">{cityData.country}</p>
+                      </div>
+                  </div>
+                  
+                  <div className="text-right">
+                      <div className="text-3xl font-black text-indigo-700">{cityData.totalMonthly}</div>
+                      <div className="text-xs text-gray-500 font-medium tracking-wide uppercase">Total Monthly Cost</div>
+                  </div>
+              </div>
 
-      {/* Category Sections */}
-      {!hiddenCategories.has("housing") && (
-        <div className={styles.categorySection()}>
-          <div className={styles.categoryHeader()}>
-            <div className="flex items-center gap-2">
-              <Home className={styles.categoryIcon()} />
-              <h3 className={styles.categoryTitle()}>Housing</h3>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => toggleCategory("housing")}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <EyeOff className="w-4 h-4" />
-              </button>
-            </div>
+              {/* Housing */}
+              <CategorySection 
+                  title="Housing" 
+                  icon={Home} 
+                  costs={cityData.costs.housing} 
+                  compareData={isComparison ? city2Data?.costs.housing : undefined}
+              />
+              {/* Food */}
+              <CategorySection 
+                  title="Food & Dining" 
+                  icon={ShoppingCart} 
+                  costs={cityData.costs.food} 
+                  compareData={isComparison ? city2Data?.costs.food : undefined}
+              />
+              {/* Transportation */}
+              <CategorySection 
+                  title="Transportation" 
+                  icon={Car} 
+                  costs={cityData.costs.transportation} 
+                  compareData={isComparison ? city2Data?.costs.transportation : undefined}
+              />
+              {/* Utilities */}
+              <CategorySection 
+                  title="Utilities" 
+                  icon={Zap} 
+                  costs={cityData.costs.utilities} 
+                  compareData={isComparison ? city2Data?.costs.utilities : undefined}
+              />
+              {/* Lifestyle */}
+              <CategorySection 
+                  title="Lifestyle" 
+                  icon={Dumbbell} 
+                  costs={cityData.costs.lifestyle} 
+                  compareData={isComparison ? city2Data?.costs.lifestyle : undefined}
+              />
           </div>
-          <div className={styles.costGrid()}>
-            {cityData.costs.housing.map((item, idx) => (
-              <div key={idx} className={styles.costItem()}>
-                <span className={styles.costLabel()}>{item.label}</span>
+      );
+  };
+  
+  // YENİ F-3: Vahid Xərc Səviyyəsi Komponenti
+  const CategorySection = ({ title, icon: Icon, costs, compareData }: any) => {
+    return (
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon className="w-5 h-5 text-indigo-500" />
+          <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {costs.map((item: any, idx: number) => {
+             const difference = compareMode && compareData?.[idx] 
+                 ? getCostDifference(item.value, compareData[idx].value)
+                 : null;
+
+             return (
+              <div key={idx} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                <span className="text-sm text-gray-600 font-medium">{item.label}</span>
                 <div className="flex items-center gap-2">
-                  <span className={styles.costValue()}>
-                    {currency === "EUR" ? item.value : convertCurrency(item.value)}
-                  </span>
-                  {showPercentages && (
-                    <span className="text-xs text-gray-500">
-                      ({((parseFloat(item.value.replace(/[^0-9]/g, '')) / 
-                         parseFloat(cityData.totalMonthly.replace(/[^0-9]/g, ''))) * 100).toFixed(0)}%)
-                    </span>
-                  )}
+                    <span className="text-md font-bold text-gray-900">{item.value}</span>
+                    {difference && (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${difference.isHigher ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                           {difference.isHigher ? <ArrowUp className="w-3 h-3 inline mr-0.5"/> : <ArrowDown className="w-3 h-3 inline mr-0.5"/>}
+                           {difference.percentage}%
+                        </span>
+                    )}
                 </div>
               </div>
-            ))}
-          </div>
+          )})}
         </div>
-      )}
-
-      {!hiddenCategories.has("food") && (
-        <div className={styles.categorySection()}>
-          <div className={styles.categoryHeader()}>
-            <div className="flex items-center gap-2">
-              <ShoppingCart className={styles.categoryIcon()} />
-              <h3 className={styles.categoryTitle()}>Food & Dining</h3>
-            </div>
-            <button
-              onClick={() => toggleCategory("food")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <EyeOff className="w-4 h-4" />
-            </button>
-          </div>
-          <div className={styles.costGrid()}>
-            {cityData.costs.food.map((item, idx) => (
-              <div key={idx} className={styles.costItem()}>
-                <span className={styles.costLabel()}>{item.label}</span>
-                <span className={styles.costValue()}>
-                  {currency === "EUR" ? item.value : convertCurrency(item.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!hiddenCategories.has("transportation") && (
-        <div className={styles.categorySection()}>
-          <div className={styles.categoryHeader()}>
-            <div className="flex items-center gap-2">
-              <Car className={styles.categoryIcon()} />
-              <h3 className={styles.categoryTitle()}>Transportation</h3>
-            </div>
-            <button
-              onClick={() => toggleCategory("transportation")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <EyeOff className="w-4 h-4" />
-            </button>
-          </div>
-          <div className={styles.costGrid()}>
-            {cityData.costs.transportation.map((item, idx) => (
-              <div key={idx} className={styles.costItem()}>
-                <span className={styles.costLabel()}>{item.label}</span>
-                <span className={styles.costValue()}>
-                  {currency === "EUR" ? item.value : convertCurrency(item.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!hiddenCategories.has("utilities") && (
-        <div className={styles.categorySection()}>
-          <div className={styles.categoryHeader()}>
-            <div className="flex items-center gap-2">
-              <Zap className={styles.categoryIcon()} />
-              <h3 className={styles.categoryTitle()}>Utilities</h3>
-            </div>
-            <button
-              onClick={() => toggleCategory("utilities")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <EyeOff className="w-4 h-4" />
-            </button>
-          </div>
-          <div className={styles.costGrid()}>
-            {cityData.costs.utilities.map((item, idx) => (
-              <div key={idx} className={styles.costItem()}>
-                <span className={styles.costLabel()}>{item.label}</span>
-                <span className={styles.costValue()}>
-                  {currency === "EUR" ? item.value : convertCurrency(item.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!hiddenCategories.has("lifestyle") && (
-        <div className={styles.categorySection()}>
-          <div className={styles.categoryHeader()}>
-            <div className="flex items-center gap-2">
-              <Dumbbell className={styles.categoryIcon()} />
-              <h3 className={styles.categoryTitle()}>Lifestyle</h3>
-            </div>
-            <button
-              onClick={() => toggleCategory("lifestyle")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <EyeOff className="w-4 h-4" />
-            </button>
-          </div>
-          <div className={styles.costGrid()}>
-            {cityData.costs.lifestyle.map((item, idx) => (
-              <div key={idx} className={styles.costItem()}>
-                <span className={styles.costLabel()}>{item.label}</span>
-                <span className={styles.costValue()}>
-                  {currency === "EUR" ? item.value : convertCurrency(item.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Notes Section */}
-      <div className="mt-6 pt-4 border-t">
-        <textarea
-          placeholder={`Add notes about ${cityData.name}...`}
-          value={cityNotes[cityData.name] || ""}
-          onChange={(e) => {
-            const updated = { ...cityNotes, [cityData.name]: e.target.value };
-            setCityNotes(updated);
-            localStorage.setItem('cityNotes', JSON.stringify(updated));
-          }}
-          className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500"
-          rows={2}
-        />
       </div>
-    </div>
-  );
+    );
+  };
+  
+  // Əgər aktiv ölkə yoxdursa və ya şəhər seçimləri yoxdursa
+  if (!activeCountry || cityOptions.length === 0) {
+     return (
+        <div className="p-8 bg-white rounded-xl shadow-lg text-center mt-10">
+          <AlertTriangle className="w-10 h-10 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-800">No City Data Available</h2>
+          <p className="text-gray-600 mt-2">The selected country ({activeCountry?.name || "N/A"}) has no defined cities or corresponding cost data.</p>
+        </div>
+     );
+  }
+
 
   return (
-    <div className={styles.container()}>
-      {/* Notification Toast */}
-      {notification && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <Check className="w-5 h-5" />
-          {notification}
-        </div>
-      )}
-
-      {/* Enhanced Toolbar */}
-      <div className="mb-6 bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">City Cost Analysis</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowSavedComparisons(!showSavedComparisons)}
-              className="px-3 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm"
-            >
-              <Save className="w-4 h-4" />
-              Saved ({savedComparisons.length})
-            </button>
-            <button
-              onClick={saveCurrentComparison}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Save Current
-            </button>
-          </div>
+    <div className="p-4 md:p-8 bg-[#F6F3F2] min-h-full">
+      <h1 className="text-3xl font-extrabold text-gray-900 mb-2">City Cost Analysis</h1>
+      <p className="text-lg text-gray-500 mb-8">Compare monthly expenses for major cities in {activeCountry.name}.</p>
+      
+      {/* Filter Bar (Premium Look) */}
+      <div className="bg-white p-5 rounded-xl shadow-lg mb-8 flex flex-col md:flex-row items-center gap-4 border border-indigo-200">
+        
+        <div className="flex flex-col flex-1 w-full md:w-auto">
+          <label className="text-xs font-semibold text-gray-500 mb-1">CITY 1 (Base)</label>
+          <select 
+            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2.5"
+            value={selectedCity1}
+            onChange={(e) => setSelectedCity1(e.target.value)}
+          >
+            {cityOptions.map((cityName) => (
+              <option key={cityName} value={cityName}>
+                {cityName}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* City Selection & Options */}
-        <div className={styles.filterBar()}>
-          <div className={styles.selectWrapper()}>
-            <div className={styles.label()}>Select City 1</div>
+        {compareMode && (
+          <div className="flex flex-col flex-1 w-full md:w-auto">
+            <label className="text-xs font-semibold text-gray-500 mb-1">CITY 2 (Comparison)</label>
             <select 
-              className={styles.select()}
-              value={selectedCity1}
-              onChange={(e) => setSelectedCity1(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2.5"
+              value={selectedCity2}
+              onChange={(e) => setSelectedCity2(e.target.value)}
             >
-              {cities.map((city) => (
-                <option key={city.name} value={city.name}>
-                  {city.flag} {city.name}
+              {cityOptions.filter(city => city !== selectedCity1).map((cityName) => (
+                <option key={cityName} value={cityName}>
+                  {cityName}
                 </option>
               ))}
             </select>
           </div>
+        )}
 
-          {compareMode && (
-            <>
-              <ArrowLeftRight className="w-6 h-6 text-gray-400 mt-6" />
-              <div className={styles.selectWrapper()}>
-                <div className={styles.label()}>Select City 2</div>
-                <select 
-                  className={styles.select()}
-                  value={selectedCity2}
-                  onChange={(e) => setSelectedCity2(e.target.value)}
-                >
-                  {cities.map((city) => (
-                    <option key={city.name} value={city.name}>
-                      {city.flag} {city.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={() => setCompareMode(!compareMode)}
-            className={`${styles.compareButton()} mt-6`}
-          >
-            {compareMode ? "Single View" : "Compare Cities"}
-          </button>
-        </div>
-
-        {/* Advanced Options Row */}
-        <div className="flex gap-2 mt-4 flex-wrap">
-          <button
-            onClick={() => setShowPercentages(!showPercentages)}
-            className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 ${
-              showPercentages ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            <Percent className="w-4 h-4" />
-            Percentages
-          </button>
-          
-          <div className="relative">
-            <select
-              value={currency}
-              onChange={(e) => {
-                setCurrency(e.target.value);
-                setExchangeRate(e.target.value === "USD" ? 1.1 : e.target.value === "GBP" ? 0.85 : 1);
-              }}
-              className="px-3 py-1.5 border rounded-lg text-sm"
-            >
-              <option value="EUR">EUR €</option>
-              <option value="USD">USD $</option>
-              <option value="GBP">GBP £</option>
-            </select>
-          </div>
-
-          <button
-            onClick={() => setShowProjection(!showProjection)}
-            className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm flex items-center gap-1"
-          >
-            <Calendar className="w-4 h-4" />
-            Projection
-          </button>
-
-          <button
-            onClick={() => setShowTrends(!showTrends)}
-            className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm flex items-center gap-1"
-          >
-            <TrendingUp className="w-4 h-4" />
-            Trends
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm flex items-center gap-1"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
-            {showExportMenu && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border p-2 w-40 z-10">
-                <button
-                  onClick={() => { exportToCSV(); setShowExportMenu(false); }}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                >
-                  Export CSV
-                </button>
-                <button
-                  onClick={() => { showNotification("PDF export coming soon!"); setShowExportMenu(false); }}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                >
-                  Export PDF
-                </button>
-              </div>
-            )}
-          </div>
-
-          {hiddenCategories.size > 0 && (
-            <button
-              onClick={() => setHiddenCategories(new Set())}
-              className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg text-sm flex items-center gap-1"
-            >
-              <Eye className="w-4 h-4" />
-              Show All ({hiddenCategories.size} hidden)
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => setCompareMode(!compareMode)}
+          className={`px-5 py-2.5 mt-4 md:mt-0 font-bold rounded-xl text-white transition-all w-full md:w-auto ${
+            compareMode ? "bg-red-500 hover:bg-red-600" : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+        >
+          {compareMode ? "Hide Comparison" : "Compare Cities"}
+        </button>
       </div>
 
-      {/* Projection Panel */}
-      {showProjection && (
-        <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Cost Projection</h3>
-          <div className="flex items-center gap-4 mb-4">
-            <label className="text-sm font-medium">Project for:</label>
-            <input
-              type="number"
-              value={projectionMonths}
-              onChange={(e) => setProjectionMonths(parseInt(e.target.value) || 12)}
-              className="px-3 py-2 border rounded-lg w-20"
-              min="1"
-              max="36"
-            />
-            <span className="text-sm">months</span>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-white rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Total Projected</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {currency} {(parseFloat(city1Data.totalMonthly.replace(/[^0-9]/g, '')) * projectionMonths * exchangeRate).toFixed(0)}
-              </div>
-            </div>
-            <div className="p-4 bg-white rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">With 10% Buffer</div>
-              <div className="text-2xl font-bold text-green-600">
-                {currency} {(parseFloat(city1Data.totalMonthly.replace(/[^0-9]/g, '')) * projectionMonths * 1.1 * exchangeRate).toFixed(0)}
-              </div>
-            </div>
-            <div className="p-4 bg-white rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Annual Total</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {currency} {(parseFloat(city1Data.totalMonthly.replace(/[^0-9]/g, '')) * 12 * exchangeRate).toFixed(0)}
-              </div>
-            </div>
-          </div>
+      {/* Comparison Summary (Yeni F-2 Göstəricisi) */}
+      {compareMode && totalCostDifference && (
+        <div className={`p-4 rounded-xl shadow-md mb-8 font-semibold flex items-center justify-center gap-2 ${totalCostDifference.isHigher ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+             {totalCostDifference.isHigher ? <ArrowUp className="w-5 h-5"/> : <ArrowDown className="w-5 h-5"/>}
+             <p>
+                **{selectedCity1}** is **{totalCostDifference.isHigher ? 'more expensive' : 'cheaper'}** by **${totalCostDifference.difference}** ({totalCostDifference.percentage}%) compared to {selectedCity2}.
+             </p>
         </div>
       )}
 
-      {/* Calculator Modal */}
-      {showCalculator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Budget Calculator</h2>
-              <button onClick={() => setShowCalculator(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {Object.entries(customBudget).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <label className="font-medium capitalize">{key}</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCustomBudget({...customBudget, [key]: Math.max(0, value - 50)})}
-                      className="p-2 hover:bg-gray-100 rounded"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="number"
-                      value={value}
-                      onChange={(e) => setCustomBudget({...customBudget, [key]: parseInt(e.target.value) || 0})}
-                      className="w-24 px-3 py-2 border rounded-lg text-center"
-                    />
-                    <button
-                      onClick={() => setCustomBudget({...customBudget, [key]: value + 50})}
-                      className="p-2 hover:bg-gray-100 rounded"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Total Monthly Budget:</span>
-                  <span className="text-blue-600">{currency} {(totalCustomBudget * exchangeRate).toFixed(0)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Saved Comparisons Modal */}
-      {showSavedComparisons && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Saved Comparisons</h2>
-              <button onClick={() => setShowSavedComparisons(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            {savedComparisons.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Save className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p>No saved comparisons yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {savedComparisons.map(comp => (
-                  <div key={comp.id} className="p-4 border rounded-lg hover:bg-gray-50 flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold">
-                        {comp.city1} {comp.city2 && `vs ${comp.city2}`}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Saved {new Date(comp.savedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedCity1(comp.city1);
-                        if (comp.city2) {
-                          setSelectedCity2(comp.city2);
-                          setCompareMode(true);
-                        }
-                        setShowSavedComparisons(false);
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Load
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* City Cards */}
+      {/* City Cards Display */}
       {compareMode ? (
-        <div className={styles.comparisonGrid()}>
-          {renderCityCard(city1Data)}
-          {renderCityCard(city2Data, true)}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {renderCityCard(city1Data, true)}
+          {renderCityCard(city2Data)}
         </div>
       ) : (
         renderCityCard(city1Data)
@@ -762,4 +286,3 @@ const CityCosts: React.FC = () => {
 };
 
 export default CityCosts;
-

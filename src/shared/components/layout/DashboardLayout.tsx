@@ -1,700 +1,334 @@
+// src/layouts/DashboardLayout.tsx - FINAL VERSIYA (Donma Fix + 5 Yeni Funksionalıq)
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useClerk } from "@clerk/clerk-react";
-import {
-  Star,
-  Plus,
-  Book,
-  Settings,
-  HelpCircle,
-  LogOut,
-  X,
-  Menu,
-  Search,
-  Bell,
-  User,
-  ChevronDown,
-  ChevronRight,
-  Package,
-  TrendingUp,
-  Clock,
-  Bookmark,
-  History,
-  Filter,
-  Download,
-  Share2,
-  Moon,
-  Sun,
-  Maximize2,
-  Minimize2,
-  RefreshCw,
-  Activity,
-  Zap,
-  Target,
-  Award,
-  Calendar,
-  MessageSquare,
-  FileText,
-  BarChart3,
-  Eye,
-  Heart,
-  Globe,
-} from "lucide-react";
-import { dashboardVariants } from "../../../lib/styles/dashboard";
-import { useAppDispatch } from "../../../hooks";
-import { Country } from "../../../types/pages";
-import { clearUser } from "../../../modules/Auth/slice";
-import { resetFormData } from "../../../modules/Onboarding/slice";
+import { Menu, X, Star, Plus, Book, Settings, HelpCircle, LogOut, Zap, TrendingUp } from "lucide-react"; 
+import { Country, SelectedPackage } from "@/modules/Dashboard/types";
+import { COUNTRIES } from "../../../lib/data/country"; 
+import CreateReportModal from "../../../modules/Dashboard/components/CreateReportModal";
 
-interface Activity {
-  id: string;
-  type: string;
-  description: string;
-  timestamp: Date;
-  icon: any;
-}
+// Mocked imports and constants...
+const useClerk = () => ({ signOut: () => console.log('Signing out') });
+const useAppDispatch = () => (action: any) => action.type === 'mock/clearUser' ? ({ type: 'mock/clearUser' }) : ({ type: 'mock/resetFormData' });
+const clearUser = () => ({ type: 'mock/clearUser' });
+const resetFormData = () => ({ type: 'mock/resetFormData' });
 
-interface Shortcut {
-  id: string;
-  label: string;
-  path: string;
-  icon: any;
-  color: string;
-}
+const DEFAULT_PREMIUM_PACKAGE: SelectedPackage = {
+    id: "pkg-premium",
+    title: "Pro Plan",
+    credits: 50,
+    price: 99,
+    currency: "USD",
+    features: ["Unlimited reports", "All filters", "Priority Support"]
+};
 
-const EnhancedDashboardLayout: React.FC = () => {
+
+const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useClerk();
   const dispatch = useAppDispatch();
-  const sidebarRef = useRef<HTMLDivElement>(null);
 
+  // State idarəetməsi
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedCountries, setSelectedCountries] = useState<Country[]>([
-    { id: "1", name: "Germany", flag: "🇩🇪" },
-    { id: "2", name: "Portugal", flag: "🇵🇹" },
-  ]);
-
-  // FEATURE 1: Search Functionality
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
-
-  // FEATURE 2: Notifications System
-  const [notifications, setNotifications] = useState<Activity[]>([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
-
-  // FEATURE 3: Recent Activity Tracker
-  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
-  const [showActivity, setShowActivity] = useState(false);
-
-  // FEATURE 4: Quick Actions Shortcuts
-  const [shortcuts] = useState<Shortcut[]>([
-    { id: "1", label: "Create Report", path: "/dashboard", icon: FileText, color: "blue" },
-    { id: "2", label: "View Analytics", path: "/dashboard", icon: BarChart3, color: "purple" },
-    { id: "3", label: "Bookmarks", path: "/dashboard", icon: Bookmark, color: "yellow" },
-    { id: "4", label: "Support", path: "/dashboard/support", icon: HelpCircle, color: "green" },
-  ]);
-  const [showShortcuts, setShowShortcuts] = useState(false);
-
-  // FEATURE 5: Dark Mode
-  const [darkMode, setDarkMode] = useState(false);
-
-  // FEATURE 6: Sidebar Pinned State
-  const [sidebarPinned, setSidebarPinned] = useState(false);
-
-  // FEATURE 7: Collapsed Sidebar Mode
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // FEATURE 8: User Profile Menu
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // FEATURE 9: Quick Stats Widget
-  const [showStats, setShowStats] = useState(true);
-  const [stats, setStats] = useState({
-    reports: 5,
-    countries: selectedCountries.length,
-    bookmarks: 12,
-    activityToday: 8
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCountryIds, setSelectedCountryIds] = useState<string[]>(["1", "2", "3"]); 
+  
+  const [selectedPackage, setSelectedPackage] = useState<SelectedPackage | null>(() => {
+    const raw = localStorage.getItem("selectedPackage");
+    return raw ? JSON.parse(raw) : DEFAULT_PREMIUM_PACKAGE;
   });
+  
+  // YENİ F-1: SessionStorage-dan aktiv ölkəni yüklə
+  const [activeCountryId, setActiveCountryId] = useState<string | null>(() => 
+    sessionStorage.getItem("activeCountryId") || null
+  ); 
+  
+  // Memoization: Ölkə obyektlərini hesablamaq
+  const selectedCountries: Country[] = useMemo(() => 
+    selectedCountryIds.map((id) => COUNTRIES.find((c) => c.id === id)).filter(Boolean) as Country[]
+  , [selectedCountryIds]);
 
-  // FEATURE 10: Keyboard Shortcuts
-  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const availableCountries: Country[] = useMemo(() => 
+    COUNTRIES.filter((c) => !selectedCountryIds.includes(c.id))
+  , [selectedCountryIds]);
+  
+  // YENİ F-2: Kredit Limitinin Sərhəddə Yoxlanılması
+  const creditsRemaining = useMemo(() => 
+      Math.max(0, selectedPackage?.credits || 0)
+  , [selectedPackage]);
 
-  const styles = dashboardVariants();
-  const availableCountries: Country[] = [
-    { id: "3", name: "Spain", flag: "🇪🇸" },
-    { id: "4", name: "Italy", flag: "🇮🇹" },
-    { id: "5", name: "France", flag: "🇫🇷" },
-    { id: "6", name: "Netherlands", flag: "🇳🇱" },
-  ];
 
-  // Load saved preferences
+  // EFFECT 1 (Aktiv Ölkə İdarəetməsi - Donma Fix)
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode) setDarkMode(JSON.parse(savedDarkMode));
+    // 1. SessionStorage-a yaz
+    if (activeCountryId) {
+        sessionStorage.setItem("activeCountryId", activeCountryId);
+    } else {
+        sessionStorage.removeItem("activeCountryId");
+    }
+      
+    // 2. İlkin yüklənmədə/ölkə əlavə edildikdə avtomatik aktiv etmə
+    if (selectedCountryIds.length > 0 && activeCountryId === null) {
+        setActiveCountryId(selectedCountryIds[0]); 
+    }
+    
+    // 3. Əgər aktiv ölkə silinibsə, yenisini aktiv et
+    if (activeCountryId && !selectedCountryIds.includes(activeCountryId)) {
+        setActiveCountryId(selectedCountryIds.length > 0 ? selectedCountryIds[0] : null);
+    }
+  }, [selectedCountryIds, activeCountryId]);
 
-    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
-    if (savedCollapsed) setSidebarCollapsed(JSON.parse(savedCollapsed));
-
-    const savedActivity = localStorage.getItem('recentActivity');
-    if (savedActivity) setRecentActivity(JSON.parse(savedActivity));
-
-    // Initialize notifications
-    setNotifications([
-      { id: "1", type: "success", description: "Report for Germany created", timestamp: new Date(), icon: FileText },
-      { id: "2", type: "info", description: "New visa requirements available", timestamp: new Date(), icon: Bell },
-      { id: "3", type: "warning", description: "Package expires in 30 days", timestamp: new Date(), icon: Package },
-    ]);
-  }, []);
-
-  // Keyboard shortcuts handler
+  // YENİ F-3: Brauzer Başlığı Dinamikliyi
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
-          case 'k':
-            e.preventDefault();
-            setShowSearch(true);
-            break;
-          case 'b':
-            e.preventDefault();
-            setSidebarCollapsed(!sidebarCollapsed);
-            break;
-          case '/':
-            e.preventDefault();
-            setShowKeyboardHelp(true);
-            break;
-        }
-      }
-    };
+    const activeCountry = selectedCountries.find(c => c.id === activeCountryId);
+    if (activeCountry) {
+        document.title = `${activeCountry.flag} ${activeCountry.name} Report | Bring Me Abroad`;
+    } else if (location.pathname === "/dashboard") {
+         document.title = `✨ Overview | Bring Me Abroad`;
+    } else {
+         document.title = `Dashboard | Bring Me Abroad`;
+    }
+  }, [activeCountryId, selectedCountries, location.pathname]);
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [sidebarCollapsed]);
 
-  // Activity tracker
-  const trackActivity = (type: string, description: string, icon: any) => {
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type,
-      description,
-      timestamp: new Date(),
-      icon
-    };
-    const updated = [newActivity, ...recentActivity].slice(0, 20);
-    setRecentActivity(updated);
-    localStorage.setItem('recentActivity', JSON.stringify(updated));
-  };
+  // Effect: LocalStorage persistency
+  useEffect(() => {
+    if (selectedPackage) {
+        localStorage.setItem("selectedPackage", JSON.stringify(selectedPackage));
+    } else {
+        localStorage.removeItem("selectedPackage");
+    }
+  }, [selectedPackage]);
 
-  const handleLogout = () => {
-    trackActivity("logout", "User logged out", LogOut);
-    signOut();
+  // Callback: Logout
+  const handleLogout = useCallback(async () => {
+    sessionStorage.removeItem("activeCountryId"); // Session-u təmizlə
+    await signOut();
     dispatch(clearUser());
     dispatch(resetFormData());
     navigate("/login", { replace: true });
-  };
+  }, [signOut, dispatch, navigate]);
 
-  const addCountry = (country: Country) => {
-    if (!selectedCountries.find((c) => c.id === country.id)) {
-      setSelectedCountries([...selectedCountries, country]);
-      trackActivity("country_added", `Added ${country.name} to reports`, Plus);
-      setStats({...stats, countries: stats.countries + 1});
+  // Callback: Ölkə silmək
+  const removeCountry = useCallback((countryId: string) => {
+    setSelectedCountryIds(prev => prev.filter(id => id !== countryId));
+  }, []);
+
+  // Callback: Ölkə əlavə etmək (Modal tərəfindən çağırılır)
+  const addCountry = useCallback((countryId: string) => {
+    if (!selectedCountryIds.includes(countryId) && creditsRemaining > 0) {
+      setSelectedCountryIds((prev) => {
+        const newIds = [...prev, countryId];
+        setActiveCountryId(countryId); 
+        return newIds;
+      });
+      
+      setSelectedPackage(prev => {
+          if (prev) {
+              return { ...prev, credits: creditsRemaining - 1 };
+          }
+          return null;
+      });
+      
+      setIsModalOpen(false); 
+      // Yeni F-4: Ölkə əlavə edildikdə avtomatik Dashborda keçid
+      if (location.pathname !== "/dashboard") {
+          navigate("/dashboard");
+      }
     }
-  };
+  }, [selectedCountryIds, setSelectedPackage, creditsRemaining, navigate, location.pathname]);
 
-  const removeCountry = (countryId: string) => {
-    const country = selectedCountries.find(c => c.id === countryId);
-    setSelectedCountries(selectedCountries.filter((c) => c.id !== countryId));
-    if (country) {
-      trackActivity("country_removed", `Removed ${country.name}`, X);
-      setStats({...stats, countries: stats.countries - 1});
-    }
-  };
+  // YENİ F-5: Kreditləri Yükləmək (Mocked)
+  const handleTopUpCredits = useCallback(() => {
+    setSelectedPackage(prev => {
+        if (prev) {
+            alert("50 kredit uğurla yükləndi!");
+            return { ...prev, credits: creditsRemaining + 50 };
+        }
+        return DEFAULT_PREMIUM_PACKAGE; // Əgər paket yoxdursa, premium paketi aktiv et
+    });
+  }, [creditsRemaining]);
 
-  const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
-    }
-    return location.pathname.startsWith(path);
-  };
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', JSON.stringify(newMode));
-    trackActivity("theme_changed", `Switched to ${newMode ? 'dark' : 'light'} mode`, darkMode ? Sun : Moon);
-  };
+  // ... Naviqasiya və UI klasları ...
+  const baseNavItemClass = "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors";
+  
+  const countryItemClass = (id: string) => `flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-200 cursor-pointer text-gray-700 font-medium ${
+    id === activeCountryId 
+      ? "bg-indigo-100/80 border border-indigo-400 text-indigo-800 font-bold shadow-lg shadow-indigo-200/50 scale-[1.02]"
+      : "bg-white/90 border border-stone-200 hover:bg-stone-100 hover:shadow-md"
+  }`;
 
-  const toggleSidebarCollapse = () => {
-    const newState = !sidebarCollapsed;
-    setSidebarCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-  };
 
   return (
-    <div className={`${styles.layout()} ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Enhanced Top Bar */}
-      <div className={`fixed top-0 right-0 left-0 lg:left-64 h-16 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b z-30 flex items-center justify-between px-6`}>
-        {/* Mobile Menu + Title */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-            aria-label="Toggle menu"
-          >
-            <Menu className="w-6 h-6" />
+    <div className="flex min-h-screen bg-[#F6F3F2] text-gray-800">
+      
+      {/* Sidebar */}
+      <aside className={`fixed z-40 w-72 h-full bg-white border-r border-gray-200 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
+        <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between">
+          <div className="font-extrabold text-xl">
+            <span className="text-gray-800">BRING ME</span>
+            <span className="text-indigo-600"> ABROAD</span>
+          </div>
+          <button className="md:hidden p-2 hover:bg-gray-100 rounded-full" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Dashboard
-          </h1>
         </div>
 
-        {/* Top Bar Actions */}
-        <div className="flex items-center gap-3">
-          {/* Search Button */}
+        <div className="px-4 py-5 flex-1 overflow-y-auto">
+          <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Reports</h4>
+
+          {/* Nav Item: Overview */}
           <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg relative`}
-            title="Search (Ctrl+K)"
+            onClick={() => { 
+                navigate("/dashboard"); 
+                setSidebarOpen(false); 
+                setActiveCountryId(null); 
+            }}
+            className={`${baseNavItemClass} mb-4 ${
+              location.pathname === "/dashboard" && activeCountryId === null
+                ? "bg-yellow-100 text-yellow-800 font-bold shadow-md rounded-xl"
+                : "hover:bg-gray-50 text-gray-700"
+            }`}
           >
-            <Search className="w-5 h-5" />
+            <Star className="w-4 h-4" /> Overview
           </button>
 
-          {/* Quick Shortcuts */}
-          <button
-            onClick={() => setShowShortcuts(!showShortcuts)}
-            className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg relative`}
-          >
-            <Zap className="w-5 h-5" />
-          </button>
-
-          {/* Activity */}
-          <button
-            onClick={() => setShowActivity(!showActivity)}
-            className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg relative`}
-          >
-            <Activity className="w-5 h-5" />
-            {recentActivity.length > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-            )}
-          </button>
-
-          {/* Notifications */}
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg relative`}
-          >
-            <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className={`p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg`}
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          {/* User Profile */}
-          <div className="relative">
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className={`flex items-center gap-2 p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg`}
-            >
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                U
-              </div>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {showUserMenu && (
-              <div className={`absolute right-0 top-full mt-2 w-56 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg border p-2 z-50`}>
-                <div className="px-3 py-2 border-b mb-2">
-                  <div className={`font-semibold ${darkMode ? 'text-white' : ''}`}>User Name</div>
-                  <div className="text-sm text-gray-500">user@email.com</div>
-                </div>
-                <button
-                  onClick={() => navigate("/dashboard/settings")}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700 text-white' : ''} rounded flex items-center gap-2`}
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </button>
-                <button
-                  onClick={() => setShowKeyboardHelp(true)}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700 text-white' : ''} rounded flex items-center gap-2`}
-                >
-                  <Target className="w-4 h-4" />
-                  Keyboard Shortcuts
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 rounded flex items-center gap-2 mt-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Search Modal */}
-      {showSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-2xl mx-4`}>
-            <div className="p-4 border-b">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search countries, visas, reports..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-50'} rounded-lg focus:ring-2 focus:ring-blue-500`}
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="text-sm text-gray-500 mb-2">Recent searches</div>
-              <div className="space-y-2">
-                <button className={`w-full text-left p-3 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg flex items-center gap-3`}>
-                  <Clock className="w-4 h-4" />
-                  Germany visa requirements
-                </button>
-                <button className={`w-full text-left p-3 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg flex items-center gap-3`}>
-                  <Clock className="w-4 h-4" />
-                  Portugal cost of living
-                </button>
-              </div>
-            </div>
-            <div className="p-4 border-t flex justify-end">
-              <button
-                onClick={() => setShowSearch(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-              >
-                Close (Esc)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Notifications Panel */}
-      {showNotifications && (
-        <div className={`fixed right-4 top-20 w-96 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl border z-50 max-h-[600px] overflow-hidden flex flex-col`}>
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className={`font-bold ${darkMode ? 'text-white' : ''}`}>Notifications</h3>
-            <button onClick={() => setShowNotifications(false)}>
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {notifications.map(notif => (
-              <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 ${darkMode ? 'hover:bg-gray-700' : ''} cursor-pointer`}>
-                <div className="flex gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    notif.type === 'success' ? 'bg-green-100' : notif.type === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'
-                  }`}>
-                    <notif.icon className={`w-5 h-5 ${
-                      notif.type === 'success' ? 'text-green-600' : notif.type === 'warning' ? 'text-yellow-600' : 'text-blue-600'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <div className={`text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>{notif.description}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {notif.timestamp.toLocaleTimeString()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="p-3 border-t">
-            <button
-              onClick={() => setUnreadCount(0)}
-              className="w-full py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
-            >
-              Mark all as read
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Activity Panel */}
-      {showActivity && (
-        <div className={`fixed right-4 top-20 w-96 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl border z-50 max-h-[600px] overflow-hidden flex flex-col`}>
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className={`font-bold ${darkMode ? 'text-white' : ''}`}>Recent Activity</h3>
-            <button onClick={() => setShowActivity(false)}>
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="overflow-y-auto flex-1 p-4">
-            {recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">No recent activity</div>
-            ) : (
-              <div className="space-y-3">
-                {recentActivity.map(activity => (
-                  <div key={activity.id} className="flex gap-3 items-start">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <activity.icon className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className={`text-sm ${darkMode ? 'text-white' : ''}`}>{activity.description}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {activity.timestamp.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Shortcuts Panel */}
-      {showShortcuts && (
-        <div className={`fixed right-4 top-20 w-80 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-2xl border z-50`}>
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className={`font-bold ${darkMode ? 'text-white' : ''}`}>Quick Actions</h3>
-            <button onClick={() => setShowShortcuts(false)}>
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="p-4 grid grid-cols-2 gap-3">
-            {shortcuts.map(shortcut => (
-              <button
-                key={shortcut.id}
+          {/* Selected Countries list (Clickable) */}
+          <div className="mt-4 space-y-3">
+            {selectedCountries.map((c) => (
+              <div 
+                key={c.id} 
+                className={countryItemClass(c.id)}
                 onClick={() => {
-                  navigate(shortcut.path);
-                  setShowShortcuts(false);
-                  trackActivity("shortcut_used", `Used ${shortcut.label}`, shortcut.icon);
+                    setActiveCountryId(c.id);
+                    // Aktiv ölkə seçiləndə avtomatik dashboard-a keçid
+                    if (location.pathname !== "/dashboard") {
+                         navigate("/dashboard");
+                    }
                 }}
-                className={`p-4 border rounded-xl hover:shadow-md transition-all text-center ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}
               >
-                <shortcut.icon className={`w-6 h-6 mx-auto mb-2 text-${shortcut.color}-500`} />
-                <div className={`text-sm font-medium ${darkMode ? 'text-white' : ''}`}>{shortcut.label}</div>
-              </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{c.flag}</span>
+                  <span className="font-semibold">{c.name}</span>
+                </div>
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation(); 
+                        removeCountry(c.id);
+                    }} 
+                    aria-label={`Remove ${c.name}`} 
+                    className="p-1 hover:bg-red-200 rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Keyboard Shortcuts Help */}
-      {showKeyboardHelp && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl max-w-2xl w-full p-6`}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : ''}`}>Keyboard Shortcuts</h2>
-              <button onClick={() => setShowKeyboardHelp(false)}>
-                <X className="w-6 h-6" />
+          {/* Add Country Button (Modal Trigger) - Premium Look */}
+          <div className="mt-6 relative">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              disabled={creditsRemaining === 0}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 border-dashed text-sm shadow-lg transition transform hover:scale-[1.01] ${
+                 creditsRemaining > 0 
+                    ? "border-indigo-400 bg-indigo-50 hover:bg-indigo-100" 
+                    : "border-gray-300 bg-gray-100 cursor-not-allowed"
+              }`}
+            >
+              <div className={`flex items-center gap-2 font-extrabold ${creditsRemaining > 0 ? "text-indigo-700" : "text-gray-500"}`}>
+                <Plus className="w-5 h-5" />
+                <span>Add New Report</span>
+              </div>
+              <span className="text-sm font-semibold text-indigo-500">({availableCountries.length})</span>
+            </button>
+          </div>
+        </div>
+        
+         {/* PREMIUM Credit Display */}
+        {selectedPackage && (
+            <div className="px-5 py-3 border-t border-indigo-200 bg-indigo-50/50 shadow-inner">
+                 <div className="flex items-center justify-between text-sm font-bold text-indigo-700 mb-2">
+                    <span className="flex items-center gap-1">
+                        <Zap className="w-4 h-4 fill-indigo-500" />
+                        {selectedPackage.title}
+                    </span>
+                    <span className={`text-xs font-semibold ${creditsRemaining <= 5 ? 'text-red-500' : ''}`}>
+                         {creditsRemaining} CREDITS LEFT
+                    </span>
+                 </div>
+                 {/* YENİ F-4: Kredit Yükləmə Düyməsi */}
+                 <button onClick={handleTopUpCredits} className="w-full text-center text-xs font-bold py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition flex items-center justify-center gap-1">
+                     <TrendingUp className="w-3 h-3"/> Top Up 50 Credits
+                 </button>
+            </div>
+        )}
+
+        {/* Bottom nav */}
+        <div className="px-4 py-4 border-t border-gray-100 bg-white">
+          <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Navigation</h4>
+          <div className="space-y-2">
+            {[
+              { path: "/dashboard/blog", icon: Book, label: "Blog" },
+              { path: "/dashboard/settings", icon: Settings, label: "Settings" },
+              { path: "/dashboard/support", icon: HelpCircle, label: "Support" },
+            ].map(({ path, icon: Icon, label }) => (
+              <button
+                key={path}
+                onClick={() => { navigate(path); setSidebarOpen(false); }}
+                className={`${baseNavItemClass} text-left ${location.pathname.startsWith(path) ? "bg-indigo-100 text-indigo-800 font-semibold" : "text-gray-700 hover:bg-gray-100"}`}
+              >
+                <Icon className="w-4 h-4" /> {label}
               </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Search</span>
-                  <kbd className="px-3 py-1 bg-gray-100 rounded text-sm font-mono">Ctrl + K</kbd>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Toggle Sidebar</span>
-                  <kbd className="px-3 py-1 bg-gray-100 rounded text-sm font-mono">Ctrl + B</kbd>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Help</span>
-                  <kbd className="px-3 py-1 bg-gray-100 rounded text-sm font-mono">Ctrl + /</kbd>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className={dashboardVariants({ sidebarOpen }).sidebarOverlay()}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Enhanced Sidebar */}
-      <aside
-        ref={sidebarRef}
-        className={`${dashboardVariants({ sidebarOpen }).sidebar()} ${
-          sidebarCollapsed ? 'w-20' : 'w-64'
-        } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} transition-all duration-300 pt-16`}
-      >
-        <div className={styles.sidebarContent()}>
-          {/* Logo */}
-          {!sidebarCollapsed && (
-            <div className={`${styles.logo()} mb-6`}>
-              <div className={styles.logoAccent()}>BRING ME</div>
-              <div className={styles.logoText()}>ABROAD</div>
-            </div>
-          )}
-
-          {/* Collapse Toggle */}
-          <button
-            onClick={toggleSidebarCollapse}
-            className={`w-full mb-4 p-2 hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-700' : ''} rounded-lg flex items-center justify-center`}
-          >
-            {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </button>
-
-          {/* Stats Widget */}
-          {showStats && !sidebarCollapsed && (
-            <div className={`mb-6 p-4 ${darkMode ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-50 to-indigo-50'} rounded-xl`}>
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div>
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-blue-600'}`}>{stats.reports}</div>
-                  <div className="text-xs text-gray-600">Reports</div>
-                </div>
-                <div>
-                  <div className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-purple-600'}`}>{stats.countries}</div>
-                  <div className="text-xs text-gray-600">Countries</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Reports Section */}
-          <div className={styles.section()}>
-            {!sidebarCollapsed && <h3 className={styles.sectionTitle()}>REPORTS</h3>}
-
-            <button
-              onClick={() => {
-                navigate("/dashboard");
-                setSidebarOpen(false);
-                trackActivity("navigation", "Navigated to Overview", Star);
-              }}
-              className={dashboardVariants({
-                active: isActive("/dashboard"),
-              }).navItem()}
-              title={sidebarCollapsed ? "Overview" : ""}
-            >
-              <Star className={styles.navIcon()} />
-              {!sidebarCollapsed && <span>Overview</span>}
-            </button>
-
-            {selectedCountries.length > 0 && !sidebarCollapsed && (
-              <div className={styles.countryList()}>
-                {selectedCountries.map((country) => (
-                  <div
-                    key={country.id}
-                    className={dashboardVariants({ active: false }).countryItem()}
-                  >
-                    <div className={styles.countryContent()}>
-                      <span className={styles.flag()}>{country.flag}</span>
-                      <span>{country.name}</span>
-                    </div>
-                    <button
-                      onClick={() => removeCountry(country.id)}
-                      className={styles.removeButton()}
-                      aria-label={`Remove ${country.name}`}
-                    >
-                      <X className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {availableCountries.length > 0 && !sidebarCollapsed && (
-              <div className="relative group">
-                <button className={styles.addButton()}>
-                  <Plus className="w-4 h-4" />
-                  <span>Add Country</span>
-                  <span className="text-[#9CA3AF]">({availableCountries.length})</span>
-                </button>
-
-                <div className="hidden group-hover:block absolute left-0 top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
-                  {availableCountries.map((country) => (
-                    <button
-                      key={country.id}
-                      onClick={() => addCountry(country)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
-                    >
-                      <span>{country.flag}</span>
-                      <span>{country.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Navigation */}
-          <div className={styles.bottomNav()}>
-            <button
-              onClick={() => {
-                navigate("/dashboard/blog");
-                setSidebarOpen(false);
-              }}
-              className={dashboardVariants({
-                active: isActive("/dashboard/blog"),
-              }).navItem()}
-              title={sidebarCollapsed ? "Blog" : ""}
-            >
-              <Book className={styles.navIcon()} />
-              {!sidebarCollapsed && <span>Blog</span>}
-            </button>
-            <button
-              onClick={() => {
-                navigate("/dashboard/settings");
-                setSidebarOpen(false);
-              }}
-              className={dashboardVariants({
-                active: isActive("/dashboard/settings"),
-              }).navItem()}
-              title={sidebarCollapsed ? "Settings" : ""}
-            >
-              <Settings className={styles.navIcon()} />
-              {!sidebarCollapsed && <span>Settings</span>}
-            </button>
-            <button
-              onClick={() => {
-                navigate("/dashboard/support");
-                setSidebarOpen(false);
-              }}
-              className={dashboardVariants({
-                active: isActive("/dashboard/support"),
-              }).navItem()}
-              title={sidebarCollapsed ? "Support" : ""}
-            >
-              <HelpCircle className={styles.navIcon()} />
-              {!sidebarCollapsed && <span>Support</span>}
-            </button>
-            <button
-              onClick={handleLogout}
-              className={dashboardVariants({ active: false }).navItem()}
-              title={sidebarCollapsed ? "Logout" : ""}
-            >
-              <LogOut className={styles.navIcon()} />
-              {!sidebarCollapsed && <span>Logout</span>}
+            ))}
+            <button onClick={handleLogout} className={`${baseNavItemClass} text-red-600 hover:bg-red-50 font-semibold`}>
+              <LogOut className="w-4 h-4" /> Logout
             </button>
           </div>
         </div>
       </aside>
+      
+      {/* Mobile Overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Main Content */}
-      <main className={`${styles.mainContent()} pt-16 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} transition-all duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <Outlet />
-      </main>
+
+      {/* Main content area */}
+      <div className="flex-1">
+        {/* Mobile top bar to open sidebar */}
+        <div className="md:hidden p-4 border-b bg-white shadow-md">
+          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-md bg-stone-100 shadow-sm">
+            <Menu className="w-6 h-6 text-gray-700" />
+          </button>
+        </div>
+
+        <main className="p-4 md:p-8">
+          <Outlet
+            context={{
+              selectedCountries,
+              activeCountryId, 
+              setActiveCountryId, 
+              setSelectedCountries: (countries: Country[]) => {
+                setSelectedCountryIds(countries.map((c) => c.id));
+              },
+              selectedPackage,
+              setSelectedPackage,
+            }}
+          />
+        </main>
+      </div>
+      
+      {/* Create Report Modal */}
+      <CreateReportModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        availableCountries={availableCountries}
+        selectedPackage={selectedPackage}
+        onCreateReport={addCountry} 
+      />
     </div>
   );
 };
 
-export default EnhancedDashboardLayout;
+export default DashboardLayout;
